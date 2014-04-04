@@ -401,9 +401,14 @@ namespace Gnf\db
 	abstract class base implements gnfDBinterface
 	{
 		private $dump;
-		public $db;
+		private $db;
 		private $transactionDepth = 0;
 		private $transactionError = false;
+
+		public function getDb()
+		{
+			return $this->db;
+		}
 
 		public function __construct()
 		{
