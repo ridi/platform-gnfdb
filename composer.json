@@ -12,5 +12,8 @@
             "name": "genesos",
             "email": "genesos@gmail.com"
         }
-    ]
+    ],
+    "required": {
+        "doctrine/dbal": "*"
+    }
 }

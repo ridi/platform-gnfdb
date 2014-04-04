@@ -607,9 +607,7 @@ namespace Gnf\db
 							}
 						} else {
 							if (strlen($ret) == 0) {
-								$ret .= $this->escapeTableName($k) . ' ' . $a->type . ' ' . $this->escapeTableName(
-										$column
-									);
+								$ret .= $this->escapeTableName($k) . ' ' . $a->type . ' ' . $this->escapeTableName($column);
 								$ret .= ' on ' . $this->escapeColumnName($k) . ' = ' . $this->escapeColumnName($column);
 							} else {
 								$ret .= ' ' . $a->type . ' ' . $this->escapeTableName($column);
@@ -725,8 +723,7 @@ namespace Gnf\db
 			$err = $this->getError($ret);
 			if ($err !== null) {
 				$this->transactionError = true;
-				throw new Exception('[sql error] ' . $err->message . ' : ' . $sql);
-				die;
+				throw new \Exception('[sql error] ' . $err->message . ' : ' . $sql);
 			}
 			return $ret;
 		}
