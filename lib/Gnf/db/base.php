@@ -401,7 +401,7 @@ namespace Gnf\db
 	abstract class base implements gnfDBinterface
 	{
 		private $dump;
-		private $db;
+		protected $db;
 		private $transactionDepth = 0;
 		private $transactionError = false;
 

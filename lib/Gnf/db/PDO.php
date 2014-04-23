@@ -6,7 +6,7 @@ class PDO extends base
 	/**
 	 * @var \Doctrine\DBAL\Driver\Connection
 	 */
-	private $db;
+	protected $db;
 	private $select_db;
 
 	public function __construct(\Doctrine\DBAL\Driver\Connection $pdo)
