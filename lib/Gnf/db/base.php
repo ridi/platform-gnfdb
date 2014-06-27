@@ -682,7 +682,7 @@ namespace Gnf\db
 					return $this->escapeColumnName($k);
 				} elseif (is_a($a, '__sqlStrcat') && is_string($k)) //only for update
 				{
-					return 'concat(' . $this->escapeColumnName($k) . ', ' . $this->escapeItem($a->dat) . ')';
+					return 'concat(ifnull(' . $this->escapeColumnName($k) . ', ""), ' . $this->escapeItem($a->dat) . ')';
 				}
 				return $this->escapeItem($a->dat);
 			}
