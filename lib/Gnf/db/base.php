@@ -167,7 +167,7 @@ namespace {
 		}
 	}
 
-	function sqlWhere($in)
+	function sqlWhere(array $in)
 	{
 		return new __sqlWhere($in);
 	}
@@ -180,7 +180,7 @@ namespace {
 		}
 	}
 
-	function sqlWhereWithClause($in)
+	function sqlWhereWithClause(array $in)
 	{
 		return new __sqlWhereWithClause($in);
 	}
@@ -910,6 +910,11 @@ namespace Gnf\db
 			$sql = "SELECT count(*) FROM ? ?";
 			return $this->sqlData($sql, sqlTable($table), sqlWhereWithClause($where));
 		}
+
+		/**
+		 * @param $handle
+		 * @return int
+		 */
 
 		protected abstract function getAffectedRows($handle);
 
