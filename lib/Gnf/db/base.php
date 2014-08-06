@@ -695,7 +695,7 @@ namespace Gnf\db
 				$s = array_shift($args);
 				$args = array_map(array(&$this, 'escapeItem'), $args);
 
-				return preg_replace('/\?/e', 'array_shift($args)', $s, count($args));
+				return preg_replace_callback('/\?/', function ($m) use (&$args) { return array_shift($args); }, $s, count($args));
 			}
 			return "";
 		}
