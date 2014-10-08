@@ -198,6 +198,11 @@ namespace {
 		return new __sqlOr(func_get_args());
 	}
 
+	function sqlOrArray(array $args)
+	{
+		return new __sqlOr($args);
+	}
+
 	class __sqlNot extends __sqlCompareOperator
 	{
 		function __sqlNot($in)
