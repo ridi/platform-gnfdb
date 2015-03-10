@@ -623,9 +623,9 @@ namespace Gnf\db
 					} else {
 						/** @var $isMoreJoinWhereClause
 						 * if $isMoreJoinWhereClause = [true]
-						 *  => sqljoin(array('tb_pay_info.t_id' => array('tb_cash.t_id', 'tb_point.type' => 'event')))
+						 *  => sqljoin(array('tb_pay_info.t_id' => array('tb_cash.t_id', 'tb_cash.type' => 'event')))
 						 * if $isMoreJoinWhereClause = [false]
-						 *  => sqljoin(array('tb_pay_info.t_id' => array('tb_cash.t_id', 'tb_point.t_id')))
+						 *  => sqljoin(array('tb_pay_info.t_id' => array('tb_cash.t_id')))
 						 */
 
 						//filter $moreJoinWhereClause
