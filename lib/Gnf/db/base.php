@@ -595,36 +595,83 @@ namespace Gnf\db
 			if (is_a($a, '__sqlJoin')) {
 				$ret = '';
 				foreach ($a->dat as $k => $columns) {
-					//if noExplictDirection = [true]
-					// => sqlJoin(array('tb_pay_info.t_id', 'tb_cash.t_id', 'tb_point.t_id'))
-					//if noExplictDirection = [false]
-					// => sqljoin(array('tb_pay_info.t_id' => array('tb_cash.t_id', 'tb_point.t_id')))
-					$noExplictDirection = is_int($k);
-					$lastColumn = '';
+
+					/** @var $joinOnlyOneColumn
+					 * if $joinOnlyOneColumn = [true]
+					 * => sqlJoin(array('tb_pay_info.t_id', 'tb_cash.t_id', 'tb_point.t_id'))
+					 * if $joinOnlyOneColumn = [false]
+					 * => sqljoin(array('tb_pay_info.t_id' => array('tb_cash.t_id', 'tb_point.t_id')))
+					 */
+
+					$joinOnlyOneColumn = is_int($k);
 
 					if (!is_array($columns)) {
 						$columns = array($columns);
 					}
-					foreach ($columns as $column) {
-						if ($noExplictDirection) {
+					if ($joinOnlyOneColumn) {
+						$lastColumn = '';
+						foreach ($columns as $keyOfColumn => $column) {
 							if (strlen($ret) == 0) {
 								$ret .= $this->escapeTableName($column);
 							} else {
 								$ret .= ' ' . $a->type . ' ' . $this->escapeTableName($column);
-								$ret .= ' on ' . $this->escapeColumnName($lastColumn) . ' = ' . $this->escapeColumnName(
+								$ret .= ' on ' . $this->escapeColumnName(
+										$lastColumn
+									) . ' = ' . $this->escapeColumnName(
 										$column
 									);
 							}
-						} else {
-							if (strlen($ret) == 0) {
-								$ret .= $this->escapeTableName($k) . ' ' . $a->type . ' ' . $this->escapeTableName($column);
-								$ret .= ' on ' . $this->escapeColumnName($k) . ' = ' . $this->escapeColumnName($column);
-							} else {
-								$ret .= ' ' . $a->type . ' ' . $this->escapeTableName($column);
-								$ret .= ' on ' . $this->escapeColumnName($k) . ' = ' . $this->escapeColumnName($column);
+							$lastColumn = $column;
+						}
+					} else {
+						/** @var $isMoreJoinWhereClause
+						 * if $isMoreJoinWhereClause = [true]
+						 *  => sqljoin(array('tb_pay_info.t_id' => array('tb_cash.t_id', 'tb_point.type' => 'event')))
+						 * if $isMoreJoinWhereClause = [false]
+						 *  => sqljoin(array('tb_pay_info.t_id' => array('tb_cash.t_id', 'tb_point.t_id')))
+						 */
+
+						//filter $moreJoinWhereClause
+						$moreJoinWhereClause = array();
+						foreach ($columns as $keyOfColumn => $column) {
+							$isMoreJoinWhereClause = !is_int($keyOfColumn);
+							if ($isMoreJoinWhereClause) {
+								$tableName = $this->escapeTableName($keyOfColumn);
+								$moreJoinWhereClause[$tableName][$keyOfColumn] = $column;
 							}
 						}
-						$lastColumn = $column;
+
+						foreach ($columns as $keyOfColumn => $column) {
+							$isMoreJoinWhereClause = !is_int($keyOfColumn);
+							if (!$isMoreJoinWhereClause) {
+								$joinLeftColumn = $k;
+								$joinRightColumn = $column;
+
+								if (strlen($ret) == 0) {
+									$ret .= $this->escapeTableName($joinLeftColumn) . ' ' .
+										$a->type . ' ' .
+										$this->escapeTableName($joinRightColumn) .
+										' on ' .
+										$this->escapeColumnName($joinLeftColumn) .
+										' = ' .
+										$this->escapeColumnName($joinRightColumn);
+								} else {
+									$ret .= ' ' .
+										$a->type .
+										' ' .
+										$this->escapeTableName($joinRightColumn) .
+										' on ' .
+										$this->escapeColumnName($joinLeftColumn) .
+										' = ' .
+										$this->escapeColumnName($joinRightColumn);
+								}
+								$joinRightTableName = $this->escapeTableName($joinRightColumn);
+								if ($moreJoinWhereClause[$joinRightTableName]) {
+									$ret .= ' and ' . $this->serializeWhere($moreJoinWhereClause[$joinRightTableName]);
+									unset($moreJoinWhereClause[$joinRightTableName]);
+								}
+							}
+						}
 					}
 				}
 				return $ret;
@@ -950,7 +997,7 @@ namespace Gnf\db
 			$keys = implode(', ', array_map(array(&$this, 'escapeColumnName'), $dats_keys));
 			$values = implode(', ', array_map(array(&$this, 'escapeItem'), $dats, $dats_keys));
 			$update = $this->serializeUpdate($update);
-			$sql = "INSERT INTO " . $table . " (" . $keys . ") VALUES (" . $values . ") on duplicate key update " . $update;
+			$sql = "INSERT INTO " . $table . " (" . $keys . ") VALUES (" . $values . ") ON DUPLICATE KEY UPDATE " . $update;
 			$stmt = $this->sqlDo($sql);
 			return min(1, $this->getAffectedRows($stmt));
 		}
