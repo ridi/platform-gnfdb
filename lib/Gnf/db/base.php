@@ -397,9 +397,6 @@ namespace Gnf\db
 		public function sqlDelete($table, $where);
 
 		public function insert_id();
-
-		/** @deprecated */
-		public function sqlArrayDict($sql);
 	}
 
 
@@ -931,19 +928,6 @@ namespace Gnf\db
 		}
 
 		protected abstract function fetchBoth($handle);
-
-		public function sqlArrayDict($sql)
-		{
-			$sql = $this->parseQuery(func_get_args());
-			$res = $this->sqlDo($sql);
-			if ($res) {
-				$arr = $this->fetchBoth($res);
-				if ($arr !== false) {
-					return $arr;
-				}
-			}
-			return null;
-		}
 
 		public function sqlDictsArgs()
 		{
