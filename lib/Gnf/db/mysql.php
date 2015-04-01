@@ -98,4 +98,30 @@ class mysql extends base
 		$this->afterConnect();
 		mysql_select_db($this->select_db, $this->db);
 	}
+
+	protected function transactionBegin()
+	{
+		$this->sqlDo('SET AUTOCOMMIT=0');
+		$this->sqlDo("BEGIN");
+	}
+
+	protected function transactionCommit()
+	{
+		$this->sqlDo("COMMIT");
+		$this->sqlDo('SET AUTOCOMMIT=1');
+	}
+
+	protected function transactionRollback()
+	{
+		$this->sqlDo("ROLLBACK");
+		$this->sqlDo('SET AUTOCOMMIT=1');
+	}
+
+	/**
+	 * @return bool
+	 */
+	protected function configIsSupportNestedTransaction()
+	{
+		return false;
+	}
 }

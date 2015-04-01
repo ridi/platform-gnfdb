@@ -101,7 +101,7 @@ class PDO extends base
 	}
 
 	/**
-	 * @param Doctrine\DBAL\Driver\Statement $handle
+	 * @param \Doctrine\DBAL\Driver\Statement $handle
 	 * @return mixed
 	 */
 	protected function getAffectedRows($handle)
@@ -118,5 +118,28 @@ class PDO extends base
 	{
 		$this->afterConnect();
 		$this->db->query('USE ' . $this->escapeLiteral($this->select_db));
+	}
+
+	protected function transactionBegin()
+	{
+		$this->db->beginTransaction();
+	}
+
+	protected function transactionCommit()
+	{
+		$this->db->commit();
+	}
+
+	protected function transactionRollback()
+	{
+		$this->db->rollBack();
+	}
+
+	/**
+	 * @return bool
+	 */
+	protected function configIsSupportNestedTransaction()
+	{
+		return false;
 	}
 }

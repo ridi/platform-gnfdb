@@ -356,8 +356,7 @@ namespace {
 		return new __sqlNull();
 	}
 }
-namespace Gnf\db
-{
+namespace Gnf\db {
 	interface gnfDBinterface
 	{
 		public function sqlBegin();
@@ -422,17 +421,15 @@ namespace Gnf\db
 			$this->sqlDo("SET NAMES 'utf8'");
 		}
 
-		public abstract function select_db($db);
-
 		public function sqlBegin()
 		{
 			if ($this->transactionDepth == 0) {
-				$this->sqlDo('SET AUTOCOMMIT=0');
-				$this->sqlDo("BEGIN");
+				$this->transactionBegin();
 				$this->transactionError = false;
 			} else {
-				//mysql은 nested 트랜잭션을 지원하지 않아요...
-				//trigger_error('[mysql] nested transaction not supported, auto wrapped');
+				if ($this->configIsSupportNestedTransaction()) {
+					$this->transactionBegin();
+				}
 			}
 			$this->transactionDepth++;
 		}
@@ -452,13 +449,14 @@ namespace Gnf\db
 		{
 			$this->transactionDepth--;
 			if ($this->transactionDepth == 0) {
-				$this->sqlDo("COMMIT");
-				$this->sqlDo('SET AUTOCOMMIT=1');
+				$this->transactionCommit();
 				$this->transactionError = false;
 			} else {
+				if ($this->configIsSupportNestedTransaction()) {
+					$this->transactionCommit();
+				}
 				if ($this->transactionDepth < 0) {
-					trigger_error('[mysql] transaction underflow');
-					die;
+					throw new \Exception('[mysql] transaction underflow');
 				}
 			}
 		}
@@ -467,18 +465,17 @@ namespace Gnf\db
 		{
 			$this->transactionDepth--;
 			if ($this->transactionDepth == 0) {
-				$this->sqlDo("ROLLBACK");
-				$this->sqlDo('SET AUTOCOMMIT=1');
+				$this->transactionRollback();
 				$this->transactionError = false;
 			} else {
+				if ($this->configIsSupportNestedTransaction()) {
+					$this->transactionRollback();
+				}
 				if ($this->transactionDepth < 0) {
-					trigger_error('[mysql] transaction underflow');
-					die;
+					throw new \Exception('[mysql] transaction underflow');
 				}
 			}
 		}
-
-		protected abstract function escapeLiteral($value);
 
 		private function callback_serializeWhere($key, $value)
 		{
@@ -731,7 +728,9 @@ namespace Gnf\db
 					return $this->escapeColumnName($k);
 				} elseif (is_a($a, '__sqlStrcat') && is_string($k)) //only for update
 				{
-					return 'concat(ifnull(' . $this->escapeColumnName($k) . ', ""), ' . $this->escapeItem($a->dat) . ')';
+					return 'concat(ifnull(' . $this->escapeColumnName($k) . ', ""), ' . $this->escapeItem(
+						$a->dat
+					) . ')';
 				}
 				return $this->escapeItem($a->dat);
 			}
@@ -744,7 +743,14 @@ namespace Gnf\db
 				$s = array_shift($args);
 				$args = array_map(array(&$this, 'escapeItem'), $args);
 
-				return preg_replace_callback('/\?/', function ($m) use (&$args) { return array_shift($args); }, $s, count($args));
+				return preg_replace_callback(
+					'/\?/',
+					function ($m) use (&$args) {
+						return array_shift($args);
+					},
+					$s,
+					count($args)
+				);
 			}
 			return "";
 		}
@@ -782,16 +788,10 @@ namespace Gnf\db
 			return $ret;
 		}
 
-		protected abstract function query($sql);
-
-		protected abstract function getError($handle);
-
 		public function sqlDump($sql)
 		{
 			return $this->parseQuery(func_get_args());
 		}
-
-		protected abstract function fetchRow($handle);
 
 		public function sqlData($sql)
 		{
@@ -845,8 +845,6 @@ namespace Gnf\db
 			return $ret;
 		}
 
-		protected abstract function fetchAssoc($handle);
-
 		public function sqlDict($sql)
 		{
 			$sql = $this->parseQuery(func_get_args());
@@ -872,8 +870,6 @@ namespace Gnf\db
 			}
 			return $ret;
 		}
-
-		protected abstract function fetchObject($handle);
 
 		public function sqlObject($sql)
 		{
@@ -927,8 +923,6 @@ namespace Gnf\db
 			return $ret;
 		}
 
-		protected abstract function fetchBoth($handle);
-
 		public function sqlDictsArgs()
 		{
 			$args = func_get_args();
@@ -946,13 +940,6 @@ namespace Gnf\db
 			$sql = "SELECT count(*) FROM ? ?";
 			return $this->sqlData($sql, sqlTable($table), sqlWhereWithClause($where));
 		}
-
-		/**
-		 * @param $handle
-		 * @return int
-		 */
-
-		protected abstract function getAffectedRows($handle);
 
 		public function sqlInsert($table, $dats)
 		{
@@ -1013,8 +1000,41 @@ namespace Gnf\db
 			$this->doConnect();
 		}
 
+		protected abstract function doConnect();
+
 		protected abstract function hasConnected();
 
-		protected abstract function doConnect();
+		public abstract function select_db($db);
+
+		protected abstract function transactionBegin();
+
+		protected abstract function transactionCommit();
+
+		protected abstract function transactionRollback();
+
+		/**
+		 * @return bool
+		 */
+		protected abstract function configIsSupportNestedTransaction();
+
+		protected abstract function escapeLiteral($value);
+
+		protected abstract function query($sql);
+
+		protected abstract function getError($handle);
+
+		protected abstract function fetchRow($handle);
+
+		protected abstract function fetchAssoc($handle);
+
+		protected abstract function fetchObject($handle);
+
+		protected abstract function fetchBoth($handle);
+
+		/**
+		 * @param $handle
+		 * @return int
+		 */
+		protected abstract function getAffectedRows($handle);
 	}
 }
