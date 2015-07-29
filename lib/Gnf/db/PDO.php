@@ -4,12 +4,15 @@ namespace Gnf\db;
 class PDO extends base
 {
 	/**
-	 * @var \Doctrine\DBAL\Driver\Connection
+	 * @var \PDO
 	 */
 	protected $db;
 	private $select_db;
 
-	public function __construct(\Doctrine\DBAL\Driver\Connection $pdo)
+	/**
+	 * @param \PDO $pdo
+	 */
+	public function __construct($pdo)
 	{
 		parent::__construct();
 		$this->db = $pdo;
@@ -43,7 +46,7 @@ class PDO extends base
 	}
 
 	/**
-	 * @param \Doctrine\DBAL\Driver\Statement $handle
+	 * @param \PDOStatement $handle
 	 * @return null|\stdClass
 	 */
 	protected function getError($handle)
@@ -60,7 +63,7 @@ class PDO extends base
 	}
 
 	/**
-	 * @param \Doctrine\DBAL\Driver\Statement $handle
+	 * @param \PDOStatement $handle
 	 * @return mixed
 	 */
 	protected function fetchRow($handle)
@@ -69,7 +72,7 @@ class PDO extends base
 	}
 
 	/**
-	 * @param \Doctrine\DBAL\Driver\Statement $handle
+	 * @param \PDOStatement $handle
 	 * @return mixed
 	 */
 	protected function fetchAssoc($handle)
@@ -78,7 +81,7 @@ class PDO extends base
 	}
 
 	/**
-	 * @param \Doctrine\DBAL\Driver\Statement $handle
+	 * @param \PDOStatement $handle
 	 * @return mixed
 	 */
 	protected function fetchObject($handle)
@@ -87,7 +90,7 @@ class PDO extends base
 	}
 
 	/**
-	 * @param \Doctrine\DBAL\Driver\Statement $handle
+	 * @param \PDOStatement $handle
 	 * @return mixed
 	 */
 	protected function fetchBoth($handle)
@@ -101,7 +104,7 @@ class PDO extends base
 	}
 
 	/**
-	 * @param \Doctrine\DBAL\Driver\Statement $handle
+	 * @param \PDOStatement $handle
 	 * @return mixed
 	 */
 	protected function getAffectedRows($handle)
