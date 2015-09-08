@@ -477,6 +477,11 @@ namespace Gnf\db {
 			}
 		}
 
+		public function isTransactionActive()
+		{
+			return $this->transactionDepth > 0;
+		}
+
 		private function callback_serializeWhere($key, $value)
 		{
 			if (is_a($value, '__sqlNot')) {
