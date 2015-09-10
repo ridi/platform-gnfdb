@@ -482,6 +482,30 @@ namespace Gnf\db {
 			return $this->transactionDepth > 0;
 		}
 
+		/**
+		 * @param $func callable
+		 * @return bool transaction success
+		 * @throws \Exception
+		 */
+		public function transactional($func)
+		{
+			if (!is_callable($func)) {
+				throw new \InvalidArgumentException(
+					'Expected argument of type "callable", got "' . gettype($func) . '"'
+				);
+			}
+
+			$this->sqlBegin();
+
+			try {
+				$func($this);
+				return $this->sqlEnd();
+			} catch (\Exception $e) {
+				$this->sqlRollback();
+				throw $e;
+			}
+		}
+
 		private function callback_serializeWhere($key, $value)
 		{
 			if (is_a($value, '__sqlNot')) {
