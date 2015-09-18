@@ -586,7 +586,7 @@ namespace Gnf\db {
 					if (strlen($objectsQuery) && strlen($scalarsQuery)) {
 						return ' ( ' . $objectsQuery . ' or ' . $scalarsQuery . ' ) ';
 					}
-					return $objectsQuery . $scalarsQuery;
+					return ' ( ' . $objectsQuery . $scalarsQuery . ' ) ';
 				}
 			}
 
