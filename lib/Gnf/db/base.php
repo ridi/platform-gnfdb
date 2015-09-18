@@ -571,10 +571,14 @@ namespace Gnf\db {
 				}
 				//process
 				{
-					foreach ($objects as $k => $object) {
-						$objects[$k] = $this->callback_serializeWhere($key, $object);
+					if (count($objects)) {
+						foreach ($objects as $k => $object) {
+							$objects[$k] = $this->callback_serializeWhere($key, $object);
+						}
+						$objectsQuery = implode(' or ', array_filter($objects, 'strlen'));
+					} else {
+						$objectsQuery = '';
 					}
-					$objectsQuery = implode(' or ', array_filter($objects, 'strlen'));
 					if (count($scalars)) {
 						$scalarsQuery = $this->escapeColumnName($key) . ' in ' . $this->escapeItem($scalars, $key);
 					} else {
@@ -586,7 +590,7 @@ namespace Gnf\db {
 					if (strlen($objectsQuery) && strlen($scalarsQuery)) {
 						return ' ( ' . $objectsQuery . ' or ' . $scalarsQuery . ' ) ';
 					}
-					return ' ( ' . $objectsQuery . $scalarsQuery . ' ) ';
+					return $objectsQuery . $scalarsQuery;
 				}
 			}
 
