@@ -506,6 +506,14 @@ namespace Gnf\db {
 			}
 		}
 
+		/**
+		 * @param $key
+		 * @param $value
+		 * @return string
+		 *
+		 * return ''(zero length string) if not available
+		 * return with '(' . xxx . ')' if has two or more clause
+		 */
 		private function callback_serializeWhere($key, $value)
 		{
 			if (is_a($value, '__sqlNot')) {
@@ -514,15 +522,6 @@ namespace Gnf\db {
 					return '(!(' . $ret . '))';
 				}
 				return '';
-			}
-			if (is_a($value, '__sqlOr')) {
-				$ret = array();
-				foreach ($value->dat as $dat) {
-					if (is_array($dat)) {
-						$ret[] = '(' . $this->serializeWhere($dat) . ')';
-					}
-				}
-				return '(' . implode(' or ', $ret) . ')';
 			}
 			if (is_a($value, '__sqlLike')) {
 				return $this->escapeColumnName($key) . ' like "%' . $this->escapeLiteral($value->dat) . '%"';
@@ -556,6 +555,14 @@ namespace Gnf\db {
 			if (is_a($value, '__sqlNull') || is_null($value)) {
 				return $this->escapeColumnName($key) . ' is null';
 			}
+			if (is_a($value, '__sqlOr')) {
+				if (is_array($value->dat)) {
+					//process as array
+					$value = $value->dat;
+				} else {
+					return '';
+				}
+			}
 			if (is_array($value)) {
 				//divide
 				{
@@ -575,7 +582,7 @@ namespace Gnf\db {
 						foreach ($objects as $k => $object) {
 							$objects[$k] = $this->callback_serializeWhere($key, $object);
 						}
-						$objectsQuery = implode(' or ', array_filter($objects, 'strlen'));
+						$objectsQuery = ' ( ' . implode(' or ', array_filter($objects, 'strlen')) . ' ) ';
 					} else {
 						$objectsQuery = '';
 					}
