@@ -556,12 +556,16 @@ namespace Gnf\db {
 				return $this->escapeColumnName($key) . ' is null';
 			}
 			if (is_a($value, '__sqlOr')) {
-				if (is_array($value->dat)) {
-					//process as array
-					$value = $value->dat;
-				} else {
-					return '';
+				$ret = array();
+				foreach ($value->dat as $dat) {
+					if (is_array($dat)) {
+						$ret[] = '(' . $this->serializeWhere($dat) . ')';
+					}
 				}
+				if (count($ret)) {
+					return '(' . implode(' or ', $ret) . ')';
+				}
+				return '';
 			}
 			if (is_array($value)) {
 				//divide
