@@ -4,7 +4,7 @@
 namespace {
 	class __sqlAdd
 	{
-		function __sqlAdd($in)
+		function __construct($in)
 		{
 			$this->dat = (int)$in;
 		}
@@ -17,7 +17,7 @@ namespace {
 
 	class __sqlStrcat
 	{
-		function __sqlStrcat($in)
+		function __construct($in)
 		{
 			$this->dat = $in;
 		}
@@ -30,7 +30,7 @@ namespace {
 
 	class __sqlPassword
 	{
-		function __sqlPassword($in)
+		function __construct($in)
 		{
 			$this->dat = $in;
 		}
@@ -47,7 +47,7 @@ namespace {
 
 	class __sqlLike extends __sqlCompareOperator
 	{
-		function __sqlLike($in)
+		function __construct($in)
 		{
 			$this->dat = $in;
 		}
@@ -65,7 +65,7 @@ namespace {
 
 	class __sqlLikeBegin extends __sqlCompareOperator
 	{
-		function __sqlLikeBegin($in)
+		function __construct($in)
 		{
 			$this->dat = $in;
 		}
@@ -83,7 +83,7 @@ namespace {
 
 	class __sqlRaw
 	{
-		function __sqlRaw($in)
+		function __construct($in)
 		{
 			$this->dat = $in;
 		}
@@ -96,7 +96,7 @@ namespace {
 
 	class __sqlTable
 	{
-		function __sqlTable($in)
+		function __construct($in)
 		{
 			$this->dat = $in;
 		}
@@ -112,7 +112,7 @@ namespace {
 
 	class __sqlColumn
 	{
-		function __sqlColumn($in)
+		function __construct($in)
 		{
 			$this->dat = $in;
 		}
@@ -128,10 +128,10 @@ namespace {
 
 	class __sqlJoin extends __sqlTable
 	{
-		function __sqlJoin($in, $type = 'join')
+		function __construct($in, $type = 'join')
 		{
+			parent::__construct($in);
 			$this->type = $type;
-			$this->dat = $in;
 		}
 	}
 
@@ -161,7 +161,7 @@ namespace {
 
 	class __sqlWhere
 	{
-		function __sqlWhere($in)
+		function __construct($in)
 		{
 			$this->dat = $in;
 		}
@@ -174,7 +174,7 @@ namespace {
 
 	class __sqlWhereWithClause
 	{
-		function __sqlWhereWithClause($in)
+		function __construct($in)
 		{
 			$this->dat = $in;
 		}
@@ -187,7 +187,7 @@ namespace {
 
 	class __sqlOr
 	{
-		function __sqlOr($in)
+		function __construct($in)
 		{
 			$this->dat = $in;
 		}
@@ -205,7 +205,7 @@ namespace {
 
 	class __sqlNot extends __sqlCompareOperator
 	{
-		function __sqlNot($in)
+		function __construct($in)
 		{
 			$this->dat = $in;
 		}
@@ -222,7 +222,7 @@ namespace {
 
 	class __sqlGreaterEqual extends __sqlCompareOperator
 	{
-		function __sqlGreaterEqual($in)
+		function __construct($in)
 		{
 			$this->dat = $in;
 		}
@@ -240,7 +240,7 @@ namespace {
 
 	class __sqlGreater extends __sqlCompareOperator
 	{
-		function __sqlGreater($in)
+		function __construct($in)
 		{
 			$this->dat = $in;
 		}
@@ -258,7 +258,7 @@ namespace {
 
 	class __sqlLesserEqual extends __sqlCompareOperator
 	{
-		function __sqlLesserEqual($in)
+		function __construct($in)
 		{
 			$this->dat = $in;
 		}
@@ -276,7 +276,7 @@ namespace {
 
 	class __sqlLesser extends __sqlCompareOperator
 	{
-		function __sqlLesser($in)
+		function __construct($in)
 		{
 			$this->dat = $in;
 		}
@@ -294,7 +294,7 @@ namespace {
 
 	class __sqlBetween
 	{
-		function __sqlBetween($in, $in2)
+		function __construct($in, $in2)
 		{
 			$this->dat = $in;
 			$this->dat2 = $in2;
@@ -308,7 +308,7 @@ namespace {
 
 	class __sqlRange
 	{
-		function __sqlRange($in, $in2)
+		function __construct($in, $in2)
 		{
 			$this->dat = $in;
 			$this->dat2 = $in2;
@@ -322,7 +322,7 @@ namespace {
 
 	class __sqlLimit
 	{
-		function __sqlLimit($from, $count)
+		function __construct($from, $count)
 		{
 			$this->from = (int)$from;
 			$this->count = (int)$count;
