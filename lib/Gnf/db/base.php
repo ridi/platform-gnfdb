@@ -43,6 +43,7 @@ namespace {
 
 	class __sqlCompareOperator
 	{
+		public $dat;
 	}
 
 	class __sqlLike extends __sqlCompareOperator
@@ -128,6 +129,8 @@ namespace {
 
 	class __sqlJoin extends __sqlTable
 	{
+		public $type;
+
 		function __construct($in, $type = 'join')
 		{
 			parent::__construct($in);
@@ -789,7 +792,7 @@ namespace Gnf\db {
 
 				return preg_replace_callback(
 					'/\?/',
-					function ($m) use (&$args) {
+					function () use (&$args) {
 						return array_shift($args);
 					},
 					$s,
