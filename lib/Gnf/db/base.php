@@ -2,6 +2,7 @@
 
 
 namespace {
+
 	class __sqlAdd
 	{
 		function __construct($in)
@@ -198,11 +199,35 @@ namespace {
 
 	function sqlOr()
 	{
-		return new __sqlOr(func_get_args());
+		$input = func_get_args();
+		$has_scalar_only = true;
+		foreach ($input as $v) {
+			if (!is_scalar($v)) {
+				$has_scalar_only = false;
+				break;
+			}
+		}
+		if ($has_scalar_only) {
+			return $input;
+		}
+
+		return new __sqlOr($input);
 	}
 
 	function sqlOrArray(array $args)
 	{
+		$input = $args;
+		$has_scalar_only = true;
+		foreach ($input as $v) {
+			if (!is_scalar($v)) {
+				$has_scalar_only = false;
+				break;
+			}
+		}
+		if ($has_scalar_only) {
+			return $input;
+		}
+
 		return new __sqlOr($args);
 	}
 
@@ -212,12 +237,24 @@ namespace {
 		{
 			$this->dat = $in;
 		}
+
+		public static function isSwitchabe($in)
+		{
+			return
+				is_a($in, '__sqlNot') &&
+				(
+					is_a($in->dat, '__sqlCompareOperator')
+					|| is_a($in->dat, '__sqlNull')
+					|| is_scalar($in->dat)
+					|| is_array($in->dat)
+				);
+		}
 	}
 
 	function sqlNot($in)
 	{
 		//부정의 부정은 긍정
-		if (is_a($in, '__sqlNot') && is_a($in->dat, '__sqlCompareOperator')) {
+		if (__sqlNot::isSwitchabe($in)) {
 			return $in->dat;
 		}
 		return new __sqlNot($in);
@@ -234,7 +271,7 @@ namespace {
 	function sqlGreaterEqual($in)
 	{
 		//__sqlNot을 포함관계에서 최상단으로
-		if (is_a($in, '__sqlNot') && is_a($in->dat, '__sqlCompareOperator')) {
+		if (__sqlNot::isSwitchabe($in)) {
 			$wrapper = new __sqlGreaterEqual($in->dat);
 			return new __sqlNot($wrapper);
 		}
@@ -252,7 +289,7 @@ namespace {
 	function sqlGreater($in)
 	{
 		//__sqlNot을 포함관계에서 최상단으로
-		if (is_a($in, '__sqlNot') && is_a($in->dat, '__sqlCompareOperator')) {
+		if (__sqlNot::isSwitchabe($in)) {
 			$wrapper = new __sqlGreater($in->dat);
 			return new __sqlNot($wrapper);
 		}
@@ -270,7 +307,7 @@ namespace {
 	function sqlLesserEqual($in)
 	{
 		//__sqlNot을 포함관계에서 최상단으로
-		if (is_a($in, '__sqlNot') && is_a($in->dat, '__sqlCompareOperator')) {
+		if (__sqlNot::isSwitchabe($in)) {
 			$wrapper = new __sqlLesserEqual($in->dat);
 			return new __sqlNot($wrapper);
 		}
@@ -288,7 +325,7 @@ namespace {
 	function sqlLesser($in)
 	{
 		//__sqlNot을 포함관계에서 최상단으로
-		if (is_a($in, '__sqlNot') && is_a($in->dat, '__sqlCompareOperator')) {
+		if (__sqlNot::isSwitchabe($in)) {
 			$wrapper = new __sqlLike($in->dat);
 			return new __sqlNot($wrapper);
 		}
@@ -360,6 +397,7 @@ namespace {
 	}
 }
 namespace Gnf\db {
+
 	interface gnfDBinterface
 	{
 		public function sqlBegin();
@@ -517,12 +555,18 @@ namespace Gnf\db {
 		 * return ''(zero length string) if not available
 		 * return with '(' . xxx . ')' if has two or more clause
 		 */
-		private function callback_serializeWhere($key, $value)
+		private function callbackSerializeWhere($key, $value)
 		{
+			if (is_a($value, '__sqlNull') || is_null($value)) {
+				return $this->escapeColumnName($key) . ' is null';
+			}
+			if (is_a($value, '__sqlNot') && (is_a($value->dat, '__sqlNull') || is_null($value->dat))) {
+				return $this->escapeColumnName($key) . ' is not null';
+			}
 			if (is_a($value, '__sqlNot')) {
-				$ret = $this->callback_serializeWhere($key, $value->dat);
+				$ret = $this->callbackSerializeWhere($key, $value->dat);
 				if (strlen($ret)) {
-					return '(!(' . $ret . '))';
+					return '( !(' . $ret . ') )';
 				}
 				return '';
 			}
@@ -555,26 +599,23 @@ namespace Gnf\db {
 					$key
 				) . ' and ' . $this->escapeColumnName($key) . ' < ' . $this->escapeItem($value->dat2, $key) . ')';
 			}
-			if (is_a($value, '__sqlNull') || is_null($value)) {
-				return $this->escapeColumnName($key) . ' is null';
-			}
 			if (is_a($value, '__sqlOr')) {
-				$ret = array();
+				$ret = [];
 				foreach ($value->dat as $dat) {
 					if (is_array($dat)) {
-						$ret[] = '(' . $this->serializeWhere($dat) . ')';
+						$ret[] = '( ' . $this->serializeWhere($dat) . ' )';
 					}
 				}
 				if (count($ret)) {
-					return '(' . implode(' or ', $ret) . ')';
+					return '( ' . implode(' or ', $ret) . ' )';
 				}
 				return '';
 			}
 			if (is_array($value)) {
 				//divide
 				{
-					$scalars = array();
-					$objects = array();
+					$scalars = [];
+					$objects = [];
 					foreach ($value as $operand) {
 						if (is_scalar($operand)) {
 							$scalars[] = $operand;
@@ -587,24 +628,24 @@ namespace Gnf\db {
 				{
 					if (count($objects)) {
 						foreach ($objects as $k => $object) {
-							$objects[$k] = $this->callback_serializeWhere($key, $object);
+							$objects[$k] = $this->callbackSerializeWhere($key, $object);
 						}
-						$objectsQuery = ' ( ' . implode(' or ', array_filter($objects, 'strlen')) . ' ) ';
+						$objects_query = '( ' . implode(' or ', array_filter($objects, 'strlen')) . ' )';
 					} else {
-						$objectsQuery = '';
+						$objects_query = '';
 					}
 					if (count($scalars)) {
-						$scalarsQuery = $this->escapeColumnName($key) . ' in ' . $this->escapeItem($scalars, $key);
+						$scalars_query = $this->escapeColumnName($key) . ' in ' . $this->escapeItem($scalars, $key);
 					} else {
-						$scalarsQuery = '';
+						$scalars_query = '';
 					}
 				}
 				//merge
 				{
-					if (strlen($objectsQuery) && strlen($scalarsQuery)) {
-						return ' ( ' . $objectsQuery . ' or ' . $scalarsQuery . ' ) ';
+					if (strlen($objects_query) && strlen($scalars_query)) {
+						return '( ' . $objects_query . ' or ' . $scalars_query . ' )';
 					}
-					return $objectsQuery . $scalarsQuery;
+					return $objects_query . $scalars_query;
 				}
 			}
 
@@ -613,12 +654,12 @@ namespace Gnf\db {
 
 		private function serializeWhere($arr)
 		{
-			$wheres = array_map(array(&$this, 'callback_serializeWhere'), array_keys($arr), $arr);
+			$wheres = array_map([&$this, 'callbackSerializeWhere'], array_keys($arr), $arr);
 			$wheres = array_filter($wheres, 'strlen');
 			return implode(' and ', $wheres);
 		}
 
-		private function callback_serializeUpdate($key, $value)
+		private function callbackSerializeUpdate($key, $value)
 		{
 			if (is_a($value, '__sqlNull') || is_null($value)) {
 				return $this->escapeColumnName($key) . ' = null';
@@ -628,7 +669,7 @@ namespace Gnf\db {
 
 		private function serializeUpdate($arr)
 		{
-			return implode(', ', array_map(array(&$this, 'callback_serializeUpdate'), array_keys($arr), $arr));
+			return implode(', ', array_map([&$this, 'callbackSerializeUpdate'], array_keys($arr), $arr));
 		}
 
 		function escapeTableName($a)
@@ -637,81 +678,83 @@ namespace Gnf\db {
 				$ret = '';
 				foreach ($a->dat as $k => $columns) {
 
-					/** @var $joinOnlyOneColumn
-					 * if $joinOnlyOneColumn = [true]
+					/** @var $has_join_only_one_column
+					 * if $has_join_only_one_column = true
 					 * => sqlJoin(array('tb_pay_info.t_id', 'tb_cash.t_id', 'tb_point.t_id'))
-					 * if $joinOnlyOneColumn = [false]
+					 * if $has_join_only_one_column = false
 					 * => sqljoin(array('tb_pay_info.t_id' => array('tb_cash.t_id', 'tb_point.t_id')))
 					 */
 
-					$joinOnlyOneColumn = is_int($k);
+					$has_join_only_one_column = is_int($k);
 
 					if (!is_array($columns)) {
-						$columns = array($columns);
+						$columns = [$columns];
 					}
-					if ($joinOnlyOneColumn) {
-						$lastColumn = '';
-						foreach ($columns as $keyOfColumn => $column) {
+					if ($has_join_only_one_column) {
+						$last_column = '';
+						foreach ($columns as $key_of_column => $column) {
 							if (strlen($ret) == 0) {
 								$ret .= $this->escapeTableName($column);
 							} else {
-								$ret .= ' ' . $a->type . ' ' . $this->escapeTableName($column);
-								$ret .= ' on ' . $this->escapeColumnName(
-										$lastColumn
-									) . ' = ' . $this->escapeColumnName(
-										$column
-									);
+								$ret .=
+									"\n\t" . $a->type . ' ' . $this->escapeTableName($column) .
+									"\n\t\t" . 'on ' . $this->escapeColumnName($last_column) .
+									' = ' . $this->escapeColumnName($column);
 							}
-							$lastColumn = $column;
+							$last_column = $column;
 						}
 					} else {
-						/** @var $isMoreJoinWhereClause
-						 * if $isMoreJoinWhereClause = [true]
+						/** @var $has_more_joinable_where_clause
+						 * if $has_more_joinable_where_clause = true
 						 *  => sqljoin(array('tb_pay_info.t_id' => array('tb_cash.t_id', 'tb_cash.type' => 'event')))
-						 * if $isMoreJoinWhereClause = [false]
+						 * if $has_more_joinable_where_clause = false
 						 *  => sqljoin(array('tb_pay_info.t_id' => array('tb_cash.t_id')))
 						 */
 
-						//filter $moreJoinWhereClause
-						$moreJoinWhereClause = array();
-						foreach ($columns as $keyOfColumn => $column) {
-							$isMoreJoinWhereClause = !is_int($keyOfColumn);
-							if ($isMoreJoinWhereClause) {
-								$tableName = $this->escapeTableName($keyOfColumn);
-								$moreJoinWhereClause[$tableName][$keyOfColumn] = $column;
+						$joinable_where_clause = [];
+						foreach ($columns as $key_of_column => $column) {
+							$has_more_joinable_where_clause = !is_int($key_of_column);
+							if ($has_more_joinable_where_clause) {
+								$table_name = $this->escapeTableName($key_of_column);
+								$joinable_where_clause[$table_name][$key_of_column] = $column;
 							}
 						}
 
-						foreach ($columns as $keyOfColumn => $column) {
-							$isMoreJoinWhereClause = !is_int($keyOfColumn);
-							if (!$isMoreJoinWhereClause) {
-								$joinLeftColumn = $k;
-								$joinRightColumn = $column;
+						foreach ($columns as $key_of_column => $column) {
+							$has_more_joinable_where_clause = !is_int($key_of_column);
+							if (!$has_more_joinable_where_clause) {
+								$join_left_column = $k;
+								$join_right_column = $column;
 
 								if (strlen($ret) == 0) {
-									$ret .= $this->escapeTableName($joinLeftColumn) . ' ' .
-										$a->type . ' ' .
-										$this->escapeTableName($joinRightColumn) .
-										' on ' .
-										$this->escapeColumnName($joinLeftColumn) .
+									$ret .= $this->escapeTableName($join_left_column) . ' ' .
+										"\n\t" . $a->type . ' ' .
+										$this->escapeTableName($join_right_column) .
+										"\n\t\t" . 'on ' .
+										$this->escapeColumnName($join_left_column) .
 										' = ' .
-										$this->escapeColumnName($joinRightColumn);
+										$this->escapeColumnName($join_right_column);
 								} else {
 									$ret .= ' ' .
-										$a->type .
+										"\n\t" . $a->type .
 										' ' .
-										$this->escapeTableName($joinRightColumn) .
-										' on ' .
-										$this->escapeColumnName($joinLeftColumn) .
+										$this->escapeTableName($join_right_column) .
+										"\n\t\t" . 'on ' .
+										$this->escapeColumnName($join_left_column) .
 										' = ' .
-										$this->escapeColumnName($joinRightColumn);
+										$this->escapeColumnName($join_right_column);
 								}
-								$joinRightTableName = $this->escapeTableName($joinRightColumn);
-								if ($moreJoinWhereClause[$joinRightTableName]) {
-									$ret .= ' and ' . $this->serializeWhere($moreJoinWhereClause[$joinRightTableName]);
-									unset($moreJoinWhereClause[$joinRightTableName]);
+								$join_right_table_name = $this->escapeTableName($join_right_column);
+								if ($joinable_where_clause[$join_right_table_name]) {
+									$ret .= ' and ' . $this->serializeWhere(
+											$joinable_where_clause[$join_right_table_name]
+										);
+									unset($joinable_where_clause[$join_right_table_name]);
 								}
 							}
+						}
+						foreach ($joinable_where_clause as $table_name => $where) {
+							$ret .= ' and ' . $this->serializeWhere($where);
 						}
 					}
 				}
@@ -738,7 +781,7 @@ namespace Gnf\db {
 			if (is_scalar($a)) {
 				return '"' . $this->escapeLiteral($a) . '"';
 			} elseif (is_array($a)) {
-				return '(' . implode(', ', array_map(array(&$this, 'escapeItem'), $a)) . ')';
+				return '(' . implode(', ', array_map([&$this, 'escapeItem'], $a)) . ')';
 			} elseif (is_object($a)) {
 				if (is_a($a, '__sqlNow')) {
 					return 'now()';
@@ -788,7 +831,7 @@ namespace Gnf\db {
 		{
 			if (count($args) >= 1) {
 				$s = array_shift($args);
-				$args = array_map(array(&$this, 'escapeItem'), $args);
+				$args = array_map([&$this, 'escapeItem'], $args);
 
 				return preg_replace_callback(
 					'/\?/',
@@ -805,9 +848,9 @@ namespace Gnf\db {
 		public function sqlDumpBegin()
 		{
 			if (!is_array($this->dump)) {
-				$this->dump = array();
+				$this->dump = [];
 			}
-			array_push($this->dump, array());
+			array_push($this->dump, []);
 		}
 
 		public function sqlDumpEnd()
@@ -857,7 +900,7 @@ namespace Gnf\db {
 		{
 			$sql = $this->parseQuery(func_get_args());
 			$res = $this->sqlDo($sql);
-			$ret = array();
+			$ret = [];
 			if ($res) {
 				while ($arr = $this->fetchRow($res)) {
 					$ret[] = $arr[0];
@@ -883,7 +926,7 @@ namespace Gnf\db {
 		{
 			$sql = $this->parseQuery(func_get_args());
 			$res = $this->sqlDo($sql);
-			$ret = array();
+			$ret = [];
 			if ($res) {
 				while ($arr = $this->fetchRow($res)) {
 					$ret[] = $arr;
@@ -909,7 +952,7 @@ namespace Gnf\db {
 		{
 			$sql = $this->parseQuery(func_get_args());
 			$res = $this->sqlDo($sql);
-			$ret = array();
+			$ret = [];
 			if ($res) {
 				while ($arr = $this->fetchAssoc($res)) {
 					$ret[] = $arr;
@@ -935,7 +978,7 @@ namespace Gnf\db {
 		{
 			$sql = $this->parseQuery(func_get_args());
 			$res = $this->sqlDo($sql);
-			$ret = array();
+			$ret = [];
 			if ($res) {
 				while ($arr = $this->fetchObject($res)) {
 					$ret[] = $arr;
@@ -961,7 +1004,7 @@ namespace Gnf\db {
 		{
 			$sql = $this->parseQuery(func_get_args());
 			$res = $this->sqlDo($sql);
-			$ret = array();
+			$ret = [];
 			if ($res) {
 				while ($arr = $this->fetchRow($res)) {
 					$ret[] = $arr;
@@ -979,7 +1022,7 @@ namespace Gnf\db {
 			}
 			array_unshift($args[1], $args[0]);
 			$args = $args[1];
-			return @call_user_func_array(array(&$this, 'sqlDicts'), $args);
+			return @call_user_func_array([&$this, 'sqlDicts'], $args);
 		}
 
 		public function sqlCount($table, $where)
@@ -992,8 +1035,8 @@ namespace Gnf\db {
 		{
 			$table = $this->escapeItem(sqlTable($table));
 			$dats_keys = array_keys($dats);
-			$keys = implode(', ', array_map(array(&$this, 'escapeColumnName'), $dats_keys));
-			$values = implode(', ', array_map(array(&$this, 'escapeItem'), $dats, $dats_keys));
+			$keys = implode(', ', array_map([&$this, 'escapeColumnName'], $dats_keys));
+			$values = implode(', ', array_map([&$this, 'escapeItem'], $dats, $dats_keys));
 			$sql = "INSERT INTO " . $table . " (" . $keys . ") VALUES (" . $values . ")";
 			$stmt = $this->sqlDo($sql);
 			return $this->getAffectedRows($stmt);
@@ -1012,8 +1055,8 @@ namespace Gnf\db {
 
 			$table = $this->escapeItem(sqlTable($table));
 			$dats_keys = array_keys($dats);
-			$keys = implode(', ', array_map(array(&$this, 'escapeColumnName'), $dats_keys));
-			$values = implode(', ', array_map(array(&$this, 'escapeItem'), $dats, $dats_keys));
+			$keys = implode(', ', array_map([&$this, 'escapeColumnName'], $dats_keys));
+			$values = implode(', ', array_map([&$this, 'escapeItem'], $dats, $dats_keys));
 			$update = $this->serializeUpdate($update);
 			$sql = "INSERT INTO " . $table . " (" . $keys . ") VALUES (" . $values . ") ON DUPLICATE KEY UPDATE " . $update;
 			$stmt = $this->sqlDo($sql);
