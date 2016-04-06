@@ -128,7 +128,7 @@ class BaseTest extends \PHPUnit_Framework_TestCase
 				['a' => sqlOrArray([1, 2])]
 			],
 			[
-				'( !(`a` in ("1", "2")) )',
+				'( !( `a` in ("1", "2") ) )',
 				['a' => sqlNot([1, 2])]
 			],
 			[
@@ -136,11 +136,11 @@ class BaseTest extends \PHPUnit_Framework_TestCase
 				['a' => sqlNot(sqlNot([1, 2]))]
 			],
 			[
-				'( ( ( !(`a` = "1") ) ) or `a` in ("2") )',
+				'( ( ( !( `a` = "1" ) ) ) or `a` in ("2") )',
 				['a' => [sqlNot(1), 2]]
 			],
 			[
-				'( !(( ( ( !(`a` = "1") ) ) or `a` in ("2") )) )',
+				'( !( ( ( ( !( `a` = "1" ) ) ) or `a` in ("2") ) ) )',
 				['a' => sqlNot([sqlNot(1), 2])]
 			],
 		];

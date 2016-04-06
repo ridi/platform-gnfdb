@@ -566,7 +566,7 @@ namespace Gnf\db {
 			if (is_a($value, '__sqlNot')) {
 				$ret = $this->callbackSerializeWhere($key, $value->dat);
 				if (strlen($ret)) {
-					return '( !(' . $ret . ') )';
+					return '( !( ' . $ret . ' ) )';
 				}
 				return '';
 			}
