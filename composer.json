@@ -5,7 +5,10 @@
     "autoload": {
         "psr-0": {
             "Gnf": "lib/"
-        }
+        },
+        "files": [
+            "lib/Gnf/db/base.php"
+        ]
     },
     "authors": [
         {
