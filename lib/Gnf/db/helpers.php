@@ -46,7 +46,7 @@ if (!function_exists('sqlLike')) {
 	function sqlLike($in)
 	{
 		//__sqlNot을 포함관계에서 최상단으로
-		if (is_a($in, 'GnfSqlNot') && is_a($in->dat, 'GnfSqlCompareOperator')) {
+		if (is_a($in, '\Gnf\db\Helper\GnfSqlNot') && is_a($in->dat, '\Gnf\db\Helper\GnfSqlCompareOperator')) {
 			$wrapper = new GnfSqlLike($in->dat);
 			return new GnfSqlNot($wrapper);
 		}
@@ -58,7 +58,7 @@ if (!function_exists('sqlLikeBegin')) {
 	function sqlLikeBegin($in)
 	{
 		//__sqlNot을 포함관계에서 최상단으로
-		if (is_a($in, 'GnfSqlNot') && is_a($in->dat, 'GnfSqlCompareOperator')) {
+		if (is_a($in, '\Gnf\db\Helper\GnfSqlNot') && is_a($in->dat, '\Gnf\db\Helper\GnfSqlCompareOperator')) {
 			$wrapper = new GnfSqlLikeBegin($in->dat);
 			return new GnfSqlNot($wrapper);
 		}
@@ -75,7 +75,7 @@ if (!function_exists('sqlRaw')) {
 if (!function_exists('sqlTable')) {
 	function sqlTable($in)
 	{
-		if (is_a($in, 'GnfSqlTable')) {
+		if (is_a($in, '\Gnf\db\Helper\GnfSqlTable')) {
 			return $in;
 		}
 		return new GnfSqlTable($in);
@@ -84,7 +84,7 @@ if (!function_exists('sqlTable')) {
 if (!function_exists('sqlColumn')) {
 	function sqlColumn($in)
 	{
-		if (is_a($in, 'GnfSqlColumn')) {
+		if (is_a($in, '\Gnf\db\Helper\GnfSqlColumn')) {
 			return $in;
 		}
 		return new GnfSqlColumn($in);
