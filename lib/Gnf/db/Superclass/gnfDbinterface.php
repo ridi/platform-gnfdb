@@ -1,7 +1,7 @@
 <?php
 namespace Gnf\db\Superclass;
 
-interface gnfDBinterface
+interface gnfDbinterface
 {
 	public function sqlBegin();
 

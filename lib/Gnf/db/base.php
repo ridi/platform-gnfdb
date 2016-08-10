@@ -3,10 +3,10 @@
 namespace Gnf\db;
 
 use Gnf\db\Helper\GnfSqlNow;
-use Gnf\db\Superclass\gnfDBinterface;
+use Gnf\db\Superclass\gnfDbinterface;
 use InvalidArgumentException;
 
-abstract class base implements gnfDBinterface
+abstract class base implements gnfDbinterface
 {
 	private $dump;
 	protected $db;
