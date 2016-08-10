@@ -126,7 +126,12 @@ abstract class base implements gnfDBinterface
 		if (is_a($value, '\Gnf\db\Helper\GnfSqlNull') || is_null($value)) {
 			return $this->escapeColumnName($key) . ' is null';
 		}
-		if (is_a($value, '\Gnf\db\Helper\GnfSqlNot') && (is_a($value->dat, '\Gnf\db\Helper\GnfSqlNull') || is_null($value->dat))) {
+		if (is_a($value, '\Gnf\db\Helper\GnfSqlNot') &&
+			(
+				is_a($value->dat, '\Gnf\db\Helper\GnfSqlNull') ||
+				is_null($value->dat)
+			)
+		) {
 			return $this->escapeColumnName($key) . ' is not null';
 		}
 		if (is_a($value, '\Gnf\db\Helper\GnfSqlNot')) {
@@ -344,12 +349,19 @@ abstract class base implements gnfDBinterface
 	//referenced yutarbbs(http://code.google.com/p/yutarbbs) by holies
 	/**
 	 * @param $value
-	 * @param $column null|string // string if update
+	 * @param $column null|string // is string if update
 	 * @return string
 	 */
 	private function escapeItem($value, $column = null)
 	{
 		if (is_scalar($value)) {
+			if (is_bool($value)) {
+				if ($value) {
+					return 'true';
+				} else {
+					return 'false';
+				}
+			}
 			return '"' . $this->escapeLiteral($value) . '"';
 		} elseif (is_array($value)) {
 			if (count($value) == 0) {

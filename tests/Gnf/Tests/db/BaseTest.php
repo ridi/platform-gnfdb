@@ -260,6 +260,86 @@ class BaseTest extends \PHPUnit_Framework_TestCase
 	}
 
 	/**
+	 * @param $result
+	 * @param $sql
+	 * @param $item
+	 * @dataProvider providerEscapeItem
+	 */
+	public function testEscapeItem($result, $sql, $item)
+	{
+		$base = new BaseTestTarget;
+
+		$this->assertEquals($result, $base->sqlDump($sql, $item));
+	}
+
+	public function providerEscapeItem()
+	{
+		return [
+			[
+				'("a", "b")',
+				'?',
+				['a', 'b']
+			],
+			[
+				'"1"',
+				'?',
+				1
+			],
+			[
+				"false",
+				'?',
+				false
+			],
+			[
+				"true",
+				'?',
+				true
+			],
+			[
+				'"-0.001"',
+				'?',
+				-0.001
+			],
+			[
+				'"0.001"',
+				'?',
+				+0.001
+			],
+		];
+	}
+
+	/**
+	 * @param $sql
+	 * @param $item
+	 * @dataProvider providerEscapeItemException
+	 * @expectedException InvalidArgumentException
+	 */
+	public function testEscapeItemException($sql, $item)
+	{
+		$base = new BaseTestTarget;
+
+		$base->sqlDump($sql, $item);
+	}
+
+	public function providerEscapeItemException()
+	{
+		return [
+			[
+				'?',
+				sqlNull()
+			],
+			[
+				'?',
+				['a', null]
+			],
+			[
+				'?',
+				['a', sqlNull()]
+			],
+		];
+	}
+
+	/**
 	 * @param $sql
 	 * @param $where
 	 * @dataProvider providerException
