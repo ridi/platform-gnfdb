@@ -99,8 +99,8 @@ if (!function_exists('sqlJoin')) {
 		return new GnfSqlJoin($in, $type);
 	}
 }
-if (!function_exists('sqlJoin')) {
-	function sqlJoin($in)
+if (!function_exists('sqlLeftJoin')) {
+	function sqlLeftJoin($in)
 	{
 		if (!is_array($in)) {
 			$in = func_get_args();
