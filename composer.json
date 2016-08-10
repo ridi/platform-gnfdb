@@ -7,7 +7,7 @@
             "Gnf": "lib/"
         },
         "files": [
-            "lib/Gnf/db/base.php"
+            "lib/Gnf/db/helpers.php"
         ]
     },
     "authors": [

@@ -2,6 +2,8 @@
 
 namespace Gnf\Tests\db;
 
+use InvalidArgumentException;
+
 class BaseTest extends \PHPUnit_Framework_TestCase
 {
 	/**
@@ -19,10 +21,6 @@ class BaseTest extends \PHPUnit_Framework_TestCase
 	public function providerWhere()
 	{
 		return [
-			[
-				'',
-				[]
-			],
 			[
 				'`a` = "1" and `b` = "2" and `c` is null',
 				['a' => '1', 'b' => '2', 'c' => sqlNull()]
@@ -156,18 +154,14 @@ class BaseTest extends \PHPUnit_Framework_TestCase
 		$base = new BaseTestTarget;
 
 		$base->sqlDumpBegin();
-		$base->sqlUpdate('TABLE', $update, []);
+		$base->sqlUpdate('TABLE', $update, ['a' => 1]);
 		$dump = $base->sqlDumpEnd();
-		$this->assertEquals('UPDATE `TABLE` SET ' . $sql . ' WHERE ', $dump[0]);
+		$this->assertEquals('UPDATE `TABLE` SET ' . $sql . ' WHERE `a` = "1"', $dump[0]);
 	}
 
 	public function providerUpdate()
 	{
 		return [
-			[
-				'',
-				[]
-			],
 			[
 				'`sqlAdd` = `sqlAdd` -1',
 				['sqlAdd' => sqlAdd(-1)]
@@ -197,8 +191,8 @@ class BaseTest extends \PHPUnit_Framework_TestCase
 				['sqlNull' => sqlNull()]
 			],
 			[
-				'`null` = null',
-				['null' => null]
+				'`null_column` = null',
+				['null_column' => null]
 			],
 		];
 	}
@@ -261,6 +255,81 @@ class BaseTest extends \PHPUnit_Framework_TestCase
 						]
 					]
 				)
+			],
+		];
+	}
+
+	/**
+	 * @param $sql
+	 * @param $where
+	 * @dataProvider providerException
+	 * @expectedException InvalidArgumentException
+	 */
+	public function testException($sql, $where)
+	{
+		$base = new BaseTestTarget;
+
+		$base->sqlDump($sql, sqlWhere($where));
+	}
+
+	public function providerException()
+	{
+		return [
+			[
+				'?',
+				['column' => []]
+			],
+			[
+				'??',
+				['column' => [1]]
+			],
+			[
+				'',
+				['column' => [1]]
+			],
+		];
+	}
+
+
+	/**
+	 * @param $update
+	 * @param $where
+	 * @dataProvider providerUpdateException
+	 * @expectedException InvalidArgumentException
+	 */
+	public function testUpdateException($update, $where)
+	{
+		$base = new BaseTestTarget;
+
+		$base->sqlUpdate('TABLE', $update, $where);
+	}
+
+	public function providerUpdateException()
+	{
+		return [
+			[
+				['column' => []],
+				['column' => ['b']]
+			],
+			[
+				['column' => ['a']],
+				['column' => []]
+			],
+			[
+				['column' => []],
+				['column' => []]
+			],
+			[
+				['column' => 'a'],
+				[]
+			],
+			[
+				['sqlNull' => sqlNot(sqlNull())],
+				['column' => ['b']]
+			],
+			[
+				['null_column' => sqlNot(null)],
+				['column' => ['b']]
 			],
 		];
 	}
