@@ -408,7 +408,7 @@ abstract class base implements gnfDBinterface
 			}
 			return $this->escapeItem($value->dat);
 		}
-		throw new InvalidArgumentException('invalid update caluse');
+		throw new InvalidArgumentException('invalid escape item');
 	}
 
 	private function parseQuery($args)

@@ -214,13 +214,13 @@ class BaseTest extends \PHPUnit_Framework_TestCase
 		return [
 			[
 				'`sqlTable`',
-				sqlTable('sqlTable')
+				sqlTable(sqlTable('sqlTable'))
 			],
 			[
 				'`table_1` 
 	join `table_2`
 		on `table_1`.`id` = `table_2`.`id`',
-				sqlJoin(['table_1.id' => 'table_2.id'])
+				sqlTable(sqlJoin(['table_1.id' => 'table_2.id']))
 			],
 			[
 				'`table_3` 
