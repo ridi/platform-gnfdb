@@ -385,13 +385,6 @@ abstract class base implements gnfDbinterface
 				return $this->escapeColumnName($value->dat);
 			} elseif (is_a($value, '\Gnf\db\Helper\GnfSqlWhere')) {
 				return $this->serializeWhere($value->dat);
-			} elseif (is_a($value, '\Gnf\db\Helper\GnfSqlWhereWithClause')) {
-				$where = $this->serializeWhere($value->dat);
-				if (strlen($where)) {
-					return ' where ' . $where;
-				} else {
-					return '';
-				}
 			} elseif (is_a($value, '\Gnf\db\Helper\GnfSqlLimit')) {
 				return 'limit ' . $value->from . ', ' . $value->count;
 			} elseif (is_a($value, '\Gnf\db\Helper\GnfSqlAdd') && is_string($column)) {//only for update
@@ -455,6 +448,17 @@ abstract class base implements gnfDbinterface
 	public function sqlDo($sql)
 	{
 		$sql = $this->parseQuery(func_get_args());
+		$ret = $this->sqlDoWithoutParsing($sql);
+		return $ret;
+	}
+
+	/**
+	 * @param $sql
+	 * @return mixed
+	 * @throws \Exception
+	 */
+	private function sqlDoWithoutParsing($sql)
+	{
 		if (count($this->dump)) {
 			foreach ($this->dump as $k => $v) {
 				array_push($this->dump[$k], $sql);
@@ -629,7 +633,7 @@ abstract class base implements gnfDbinterface
 		$keys = implode(', ', array_map([&$this, 'escapeColumnName'], $dats_keys));
 		$values = implode(', ', array_map([&$this, 'escapeItem'], $dats, $dats_keys));
 		$sql = "INSERT INTO " . $table . " (" . $keys . ") VALUES (" . $values . ")";
-		$stmt = $this->sqlDo($sql);
+		$stmt = $this->sqlDoWithoutParsing($sql);
 		return $this->getAffectedRows($stmt);
 	}
 
@@ -650,7 +654,7 @@ abstract class base implements gnfDbinterface
 		$values = implode(', ', array_map([&$this, 'escapeItem'], $dats, $dats_keys));
 		$update = $this->serializeUpdate($update);
 		$sql = "INSERT INTO " . $table . " (" . $keys . ") VALUES (" . $values . ") ON DUPLICATE KEY UPDATE " . $update;
-		$stmt = $this->sqlDo($sql);
+		$stmt = $this->sqlDoWithoutParsing($sql);
 		return min(1, $this->getAffectedRows($stmt));
 	}
 
@@ -660,7 +664,7 @@ abstract class base implements gnfDbinterface
 		$update = $this->serializeUpdate($dats);
 		$where = $this->serializeWhere($where);
 		$sql = "UPDATE " . $table . " SET " . $update . " WHERE " . $where;
-		$stmt = $this->sqlDo($sql);
+		$stmt = $this->sqlDoWithoutParsing($sql);
 		return $this->getAffectedRows($stmt);
 	}
 
@@ -669,7 +673,7 @@ abstract class base implements gnfDbinterface
 		$table = $this->escapeItem(sqlTable($table));
 		$where = $this->serializeWhere($where);
 		$sql = "DELETE FROM " . $table . " WHERE " . $where;
-		$stmt = $this->sqlDo($sql);
+		$stmt = $this->sqlDoWithoutParsing($sql);
 		return $this->getAffectedRows($stmt);
 	}
 

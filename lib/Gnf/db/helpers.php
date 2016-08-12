@@ -21,7 +21,6 @@ use Gnf\db\Helper\GnfSqlRaw;
 use Gnf\db\Helper\GnfSqlStrcat;
 use Gnf\db\Helper\GnfSqlTable;
 use Gnf\db\Helper\GnfSqlWhere;
-use Gnf\db\Helper\GnfSqlWhereWithClause;
 
 if (!function_exists('sqlAdd')) {
 	function sqlAdd($in)
@@ -121,17 +120,6 @@ if (!function_exists('sqlWhere')) {
 	function sqlWhere(array $in)
 	{
 		return new GnfSqlWhere($in);
-	}
-}
-if (!function_exists('sqlWhereWithClause')) {
-	/**
-	 * @param array $in
-	 * @return GnfSqlWhereWithClause
-	 * @deprecated
-	 */
-	function sqlWhereWithClause(array $in)
-	{
-		return new GnfSqlWhereWithClause($in);
 	}
 }
 if (!function_exists('sqlOr')) {
