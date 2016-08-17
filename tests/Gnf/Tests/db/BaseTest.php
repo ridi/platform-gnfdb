@@ -146,6 +146,111 @@ class BaseTest extends \PHPUnit_Framework_TestCase
 
 	/**
 	 * @param $sql
+	 * @param $insert
+	 * @dataProvider providerInsert
+	 */
+	public function testInsert($sql, $insert)
+	{
+		$base = new BaseTestTarget;
+
+		$base->sqlDumpBegin();
+		$base->sqlInsert('TABLE', $insert);
+		$dump = $base->sqlDumpEnd();
+		$this->assertEquals($sql, $dump[0]);
+	}
+
+	public function providerInsert()
+	{
+		return [
+			[
+				'INSERT INTO `TABLE` (`sqlPassword`) VALUES (password("password"))',
+				['sqlPassword' => sqlPassword('password')]
+			],
+			[
+				'INSERT INTO `TABLE` (`sqlNow`) VALUES (now())',
+				['sqlNow' => sqlNow()]
+			],
+			[
+				'INSERT INTO `TABLE` (`sqlNull`) VALUES (null)',
+				['sqlNull' => sqlNull()]
+			],
+			[
+				'INSERT INTO `TABLE` (`null_column`) VALUES (null)',
+				['null_column' => null]
+			],
+		];
+	}
+
+	/**
+	 * @param $insert
+	 * @dataProvider providerInsertException
+	 */
+	public function testInsertException($insert)
+	{
+		$base = new BaseTestTarget;
+
+		$base->sqlDumpBegin();
+		$base->sqlInsert('TABLE', $insert);
+		$base->sqlInsertOrUpdate('TABLE', $insert);
+		$base->sqlDumpEnd();
+	}
+
+	public function providerInsertException()
+	{
+		return [
+			[
+				['sqlAdd' => sqlAdd(-1)]
+			],
+			[
+				['sqlAdd' => sqlAdd(0)]
+			],
+			[
+				['sqlAdd' => sqlAdd(1)]
+			],
+			[
+				['sqlStrcat' => sqlStrcat(' more string')]
+			],
+		];
+	}
+
+	/**
+	 * @param $sql
+	 * @param $insert
+	 * @dataProvider providerUpsert
+	 */
+	public function testUpsert($sql, $insert)
+	{
+		$base = new BaseTestTarget;
+
+		$base->sqlDumpBegin();
+		$base->sqlInsertOrUpdate('TABLE', $insert);
+		$dump = $base->sqlDumpEnd();
+		$this->assertEquals($sql, $dump[0]);
+	}
+
+	public function providerUpsert()
+	{
+		return [
+			[
+				'INSERT INTO `TABLE` (`sqlPassword`) VALUES (password("password")) ON DUPLICATE KEY UPDATE `sqlPassword` = password("password")',
+				['sqlPassword' => sqlPassword('password')]
+			],
+			[
+				'INSERT INTO `TABLE` (`sqlNow`) VALUES (now()) ON DUPLICATE KEY UPDATE `sqlNow` = now()',
+				['sqlNow' => sqlNow()]
+			],
+			[
+				'INSERT INTO `TABLE` (`sqlNull`) VALUES (null) ON DUPLICATE KEY UPDATE `sqlNull` = null',
+				['sqlNull' => sqlNull()]
+			],
+			[
+				'INSERT INTO `TABLE` (`null_column`) VALUES (null) ON DUPLICATE KEY UPDATE `null_column` = null',
+				['null_column' => null]
+			],
+		];
+	}
+	/**
+	 * @param $sql
 	 * @param $update
 	 * @dataProvider providerUpdate
 	 */
