@@ -1,5 +1,5 @@
 {
-    "name": "gnf/gnfdb",
+    "name": "ridibooks/platform-gnfdb",
     "description": "A Database library",
     "license": "MIT",
     "autoload": {
