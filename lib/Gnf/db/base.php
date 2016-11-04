@@ -91,6 +91,7 @@ abstract class base implements gnfDbinterface
 
 	/**
 	 * @param $func callable
+	 *
 	 * @return bool transaction success
 	 * @throws \Exception
 	 */
@@ -116,6 +117,7 @@ abstract class base implements gnfDbinterface
 	/**
 	 * @param $key
 	 * @param $value
+	 *
 	 * @return string
 	 *
 	 * return ''(zero length string) if not available
@@ -124,7 +126,7 @@ abstract class base implements gnfDbinterface
 	private function callbackSerializeWhere($key, $value)
 	{
 		if (is_a($value, '\Gnf\db\Helper\GnfSqlNull') || is_null($value)) {
-			return $this->escapeColumnName($key) . ' is null';
+			return $this->escapeColumnName($key) . ' is NULL';
 		}
 		if (is_a($value, '\Gnf\db\Helper\GnfSqlNot') &&
 			(
@@ -132,7 +134,7 @@ abstract class base implements gnfDbinterface
 				is_null($value->dat)
 			)
 		) {
-			return $this->escapeColumnName($key) . ' is not null';
+			return $this->escapeColumnName($key) . ' is not NULL';
 		}
 		if (is_a($value, '\Gnf\db\Helper\GnfSqlNot')) {
 			$ret = $this->callbackSerializeWhere($key, $value->dat);
@@ -235,7 +237,7 @@ abstract class base implements gnfDbinterface
 	private function callbackSerializeUpdate($key, $value)
 	{
 		if (is_a($value, '\Gnf\db\Helper\GnfSqlNull') || is_null($value)) {
-			return $this->escapeColumnName($key) . ' = null';
+			return $this->escapeColumnName($key) . ' = NULL';
 		}
 		return $this->escapeColumnName($key) . ' = ' . $this->escapeItem($value, $key);
 	}
@@ -349,12 +351,13 @@ abstract class base implements gnfDbinterface
 	//referenced yutarbbs(http://code.google.com/p/yutarbbs) by holies
 	/**
 	 * @param $value
+	 *
 	 * @return string
 	 */
 	private function escapeItemWithNull($value)
 	{
 		if (is_a($value, '\Gnf\db\Helper\GnfSqlNull') || is_null($value)) {
-			return 'null';
+			return 'NULL';
 		}
 		return self::escapeItem($value);
 	}
@@ -362,6 +365,7 @@ abstract class base implements gnfDbinterface
 	/**
 	 * @param $value
 	 * @param $column null|string // is string if update
+	 *
 	 * @return string
 	 */
 	private function escapeItem($value, $column = null)
@@ -466,6 +470,7 @@ abstract class base implements gnfDbinterface
 
 	/**
 	 * @param $sql
+	 *
 	 * @return mixed
 	 * @throws \Exception
 	 */
@@ -649,6 +654,30 @@ abstract class base implements gnfDbinterface
 		return $this->getAffectedRows($stmt);
 	}
 
+	/**
+	 * @param       $table
+	 * @param array $dat_keys
+	 * @param array $dat_valuess
+	 *
+	 * @return int
+	 */
+	public function sqlInsertBulk($table, $dat_keys, $dat_valuess)
+	{
+		$table = $this->escapeItem(sqlTable($table));
+		$keys = implode(', ', array_map([&$this, 'escapeColumnName'], $dat_keys));
+		$bulk_values = [];
+		foreach ($dat_valuess as $dat_values) {
+			$bulk_values[] = implode(', ', array_map([&$this, 'escapeItemWithNull'], $dat_values));
+		}
+		$sql = "INSERT INTO " . $table . " (" . $keys . ") VALUES ";
+		foreach ($bulk_values as $values) {
+			$sql .= ' ( ' . $values . ' ),';
+		}
+		$sql = substr($sql, 0, -1);
+		$stmt = $this->sqlDoWithoutParsing($sql);
+		return $this->getAffectedRows($stmt);
+	}
+
 	public function sqlInsertOrUpdate($table, $dats, $update = null)
 	{
 		/**
@@ -730,6 +759,7 @@ abstract class base implements gnfDbinterface
 
 	/**
 	 * @param $handle
+	 *
 	 * @return int
 	 */
 	abstract protected function getAffectedRows($handle);
