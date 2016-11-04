@@ -47,6 +47,7 @@ class PDO extends base
 
 	/**
 	 * @param \PDOStatement $handle
+	 *
 	 * @return null|\stdClass
 	 */
 	protected function getError($handle)
@@ -64,6 +65,7 @@ class PDO extends base
 
 	/**
 	 * @param \PDOStatement $handle
+	 *
 	 * @return mixed
 	 */
 	protected function fetchRow($handle)
@@ -73,6 +75,7 @@ class PDO extends base
 
 	/**
 	 * @param \PDOStatement $handle
+	 *
 	 * @return mixed
 	 */
 	protected function fetchAssoc($handle)
@@ -82,6 +85,7 @@ class PDO extends base
 
 	/**
 	 * @param \PDOStatement $handle
+	 *
 	 * @return mixed
 	 */
 	protected function fetchObject($handle)
@@ -91,6 +95,7 @@ class PDO extends base
 
 	/**
 	 * @param \PDOStatement $handle
+	 *
 	 * @return mixed
 	 */
 	protected function fetchBoth($handle)
@@ -105,6 +110,7 @@ class PDO extends base
 
 	/**
 	 * @param \PDOStatement $handle
+	 *
 	 * @return mixed
 	 */
 	protected function getAffectedRows($handle)

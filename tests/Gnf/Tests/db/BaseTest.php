@@ -9,6 +9,7 @@ class BaseTest extends \PHPUnit_Framework_TestCase
 	/**
 	 * @param $sql
 	 * @param $where
+	 *
 	 * @dataProvider providerWhere
 	 */
 	public function testWhere($sql, $where)
@@ -22,7 +23,7 @@ class BaseTest extends \PHPUnit_Framework_TestCase
 	{
 		return [
 			[
-				'`a` = "1" and `b` = "2" and `c` is null',
+				'`a` = "1" and `b` = "2" and `c` is NULL',
 				['a' => '1', 'b' => '2', 'c' => sqlNull()]
 			],
 			[
@@ -62,15 +63,15 @@ class BaseTest extends \PHPUnit_Framework_TestCase
 				['a' => sqlOr(1, ['b' => 2])]
 			],
 			[
-				'`c` is null',
+				'`c` is NULL',
 				['c' => sqlNull()]
 			],
 			[
-				'`d` is not null',
+				'`d` is not NULL',
 				['d' => sqlNot(sqlNull())]
 			],
 			[
-				'`e` is not null and `f` = "g"',
+				'`e` is not NULL and `f` = "g"',
 				['e' => sqlNot(sqlNull()), 'f' => 'g']
 			],
 			[
@@ -147,6 +148,7 @@ class BaseTest extends \PHPUnit_Framework_TestCase
 	/**
 	 * @param $sql
 	 * @param $insert
+	 *
 	 * @dataProvider providerInsert
 	 */
 	public function testInsert($sql, $insert)
@@ -171,18 +173,53 @@ class BaseTest extends \PHPUnit_Framework_TestCase
 				['sqlNow' => sqlNow()]
 			],
 			[
-				'INSERT INTO `TABLE` (`sqlNull`) VALUES (null)',
+				'INSERT INTO `TABLE` (`sqlNull`) VALUES (NULL)',
 				['sqlNull' => sqlNull()]
 			],
 			[
-				'INSERT INTO `TABLE` (`null_column`) VALUES (null)',
+				'INSERT INTO `TABLE` (`null_column`) VALUES (NULL)',
 				['null_column' => null]
 			],
 		];
 	}
 
 	/**
+	 * @param $sql
+	 * @param $keys
+	 * @param $values
+	 *
+	 * @dataProvider providerInsertBulk
+	 */
+	public function testInsertBulk($sql, $keys, $values)
+	{
+		$base = new BaseTestTarget;
+
+		$base->sqlDumpBegin();
+		$base->sqlInsertBulk('TABLE', $keys, $values);
+		$dump = $base->sqlDumpEnd();
+		$this->assertEquals($sql, $dump[0]);
+	}
+
+	public function providerInsertBulk()
+	{
+		return [
+			[
+				'INSERT INTO `TABLE` (`key`) VALUES  ( password("password") ), ( now() ), ( NULL ), ( NULL ), ( "123" )',
+				['key'],
+				[
+					[sqlPassword('password')],
+					[sqlNow()],
+					[sqlNull()],
+					[null],
+					['123']
+				]
+			],
+		];
+	}
+
+	/**
 	 * @param $insert
+	 *
 	 * @dataProvider providerInsertException
 	 */
 	public function testInsertException($insert)
@@ -216,6 +253,7 @@ class BaseTest extends \PHPUnit_Framework_TestCase
 	/**
 	 * @param $sql
 	 * @param $insert
+	 *
 	 * @dataProvider providerUpsert
 	 */
 	public function testUpsert($sql, $insert)
@@ -240,18 +278,20 @@ class BaseTest extends \PHPUnit_Framework_TestCase
 				['sqlNow' => sqlNow()]
 			],
 			[
-				'INSERT INTO `TABLE` (`sqlNull`) VALUES (null) ON DUPLICATE KEY UPDATE `sqlNull` = null',
+				'INSERT INTO `TABLE` (`sqlNull`) VALUES (NULL) ON DUPLICATE KEY UPDATE `sqlNull` = NULL',
 				['sqlNull' => sqlNull()]
 			],
 			[
-				'INSERT INTO `TABLE` (`null_column`) VALUES (null) ON DUPLICATE KEY UPDATE `null_column` = null',
+				'INSERT INTO `TABLE` (`null_column`) VALUES (NULL) ON DUPLICATE KEY UPDATE `null_column` = NULL',
 				['null_column' => null]
 			],
 		];
 	}
+
 	/**
 	 * @param $sql
 	 * @param $update
+	 *
 	 * @dataProvider providerUpdate
 	 */
 	public function testUpdate($sql, $update)
@@ -292,11 +332,11 @@ class BaseTest extends \PHPUnit_Framework_TestCase
 				['sqlNow' => sqlNow()]
 			],
 			[
-				'`sqlNull` = null',
+				'`sqlNull` = NULL',
 				['sqlNull' => sqlNull()]
 			],
 			[
-				'`null_column` = null',
+				'`null_column` = NULL',
 				['null_column' => null]
 			],
 		];
@@ -305,6 +345,7 @@ class BaseTest extends \PHPUnit_Framework_TestCase
 	/**
 	 * @param $sql
 	 * @param $join
+	 *
 	 * @dataProvider providerTable
 	 */
 	public function testTable($sql, $join)
@@ -368,6 +409,7 @@ class BaseTest extends \PHPUnit_Framework_TestCase
 	 * @param $result
 	 * @param $sql
 	 * @param $item
+	 *
 	 * @dataProvider providerEscapeItem
 	 */
 	public function testEscapeItem($result, $sql, $item)
@@ -416,6 +458,7 @@ class BaseTest extends \PHPUnit_Framework_TestCase
 	/**
 	 * @param $sql
 	 * @param $item
+	 *
 	 * @dataProvider providerEscapeItemException
 	 * @expectedException InvalidArgumentException
 	 */
@@ -447,6 +490,7 @@ class BaseTest extends \PHPUnit_Framework_TestCase
 	/**
 	 * @param $sql
 	 * @param $where
+	 *
 	 * @dataProvider providerException
 	 * @expectedException InvalidArgumentException
 	 */
@@ -479,6 +523,7 @@ class BaseTest extends \PHPUnit_Framework_TestCase
 	/**
 	 * @param $update
 	 * @param $where
+	 *
 	 * @dataProvider providerUpdateException
 	 * @expectedException InvalidArgumentException
 	 */
