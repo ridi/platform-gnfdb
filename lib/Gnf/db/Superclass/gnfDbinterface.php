@@ -33,6 +33,8 @@ interface gnfDbinterface
 
 	public function sqlInsert($table, $dats);
 
+	public function sqlInsertBulk($table, $dat_keys, $dat_valuess);
+
 	public function sqlInsertOrUpdate($table, $dats, $update = null);
 
 	public function sqlUpdate($table, $dats, $where);

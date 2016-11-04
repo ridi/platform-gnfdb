@@ -649,6 +649,23 @@ abstract class base implements gnfDbinterface
 		return $this->getAffectedRows($stmt);
 	}
 
+	public function sqlInsertBulk($table, $dat_keys, $dat_valuess)
+	{
+		$table = $this->escapeItem(sqlTable($table));
+		$keys = implode(', ', array_map([&$this, 'escapeColumnName'], $dat_keys));
+		$bulk_values = [];
+		foreach ($dat_valuess as $dat_values) {
+			$bulk_values[] = implode(', ', array_map([&$this, 'escapeItemWithNull'], $dat_values));
+		}
+		$sql = "INSERT INTO " . $table . " (" . $keys . ") VALUES ";
+		foreach($bulk_values as $values) {
+			$sql .= '( ' . $values . ') ,';
+		}
+		$sql = substr($sql, 0, -2);
+		$stmt = $this->sqlDoWithoutParsing($sql);
+		return $this->getAffectedRows($stmt);
+	}
+
 	public function sqlInsertOrUpdate($table, $dats, $update = null)
 	{
 		/**
