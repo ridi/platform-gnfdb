@@ -300,8 +300,6 @@ transaction은 다음 두가지 방법을 지원한다.
     });
     ```
 
-    ​
-
 - sqlBegin-sqlEnd
 
   - ```php
