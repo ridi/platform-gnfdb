@@ -18,11 +18,6 @@ abstract class base implements gnfDbinterface
 		return $this->db;
 	}
 
-	public function __construct()
-	{
-
-	}
-
 	protected function afterConnect()
 	{
 		$this->sqlDo("SET NAMES 'utf8'");
@@ -498,7 +493,7 @@ abstract class base implements gnfDbinterface
 	public function sqlData($sql)
 	{
 		$sql = $this->parseQuery(func_get_args());
-		$res = $this->sqlDo($sql);
+		$res = $this->sqlDoWithoutParsing($sql);
 		if ($res) {
 			$arr = $this->fetchRow($res);
 			if (isset($arr[0])) {
@@ -511,7 +506,7 @@ abstract class base implements gnfDbinterface
 	public function sqlDatas($sql)
 	{
 		$sql = $this->parseQuery(func_get_args());
-		$res = $this->sqlDo($sql);
+		$res = $this->sqlDoWithoutParsing($sql);
 		$ret = [];
 		if ($res) {
 			while ($arr = $this->fetchRow($res)) {
@@ -524,7 +519,7 @@ abstract class base implements gnfDbinterface
 	public function sqlArray($sql)
 	{
 		$sql = $this->parseQuery(func_get_args());
-		$res = $this->sqlDo($sql);
+		$res = $this->sqlDoWithoutParsing($sql);
 		if ($res) {
 			$arr = $this->fetchRow($res);
 			if ($arr) {
@@ -537,7 +532,7 @@ abstract class base implements gnfDbinterface
 	public function sqlArrays($sql)
 	{
 		$sql = $this->parseQuery(func_get_args());
-		$res = $this->sqlDo($sql);
+		$res = $this->sqlDoWithoutParsing($sql);
 		$ret = [];
 		if ($res) {
 			while ($arr = $this->fetchRow($res)) {
@@ -550,7 +545,7 @@ abstract class base implements gnfDbinterface
 	public function sqlDict($sql)
 	{
 		$sql = $this->parseQuery(func_get_args());
-		$res = $this->sqlDo($sql);
+		$res = $this->sqlDoWithoutParsing($sql);
 		if ($res) {
 			$arr = $this->fetchAssoc($res);
 			if ($arr !== false) {
@@ -563,7 +558,7 @@ abstract class base implements gnfDbinterface
 	public function sqlDicts($sql)
 	{
 		$sql = $this->parseQuery(func_get_args());
-		$res = $this->sqlDo($sql);
+		$res = $this->sqlDoWithoutParsing($sql);
 		$ret = [];
 		if ($res) {
 			while ($arr = $this->fetchAssoc($res)) {
@@ -576,7 +571,7 @@ abstract class base implements gnfDbinterface
 	public function sqlObject($sql)
 	{
 		$sql = $this->parseQuery(func_get_args());
-		$res = $this->sqlDo($sql);
+		$res = $this->sqlDoWithoutParsing($sql);
 		if ($res) {
 			$arr = $this->fetchObject($res);
 			if ($arr !== false) {
@@ -589,7 +584,7 @@ abstract class base implements gnfDbinterface
 	public function sqlObjects($sql)
 	{
 		$sql = $this->parseQuery(func_get_args());
-		$res = $this->sqlDo($sql);
+		$res = $this->sqlDoWithoutParsing($sql);
 		$ret = [];
 		if ($res) {
 			while ($arr = $this->fetchObject($res)) {
@@ -602,7 +597,7 @@ abstract class base implements gnfDbinterface
 	public function sqlLine($sql)
 	{
 		$sql = $this->parseQuery(func_get_args());
-		$res = $this->sqlDo($sql);
+		$res = $this->sqlDoWithoutParsing($sql);
 		if ($res) {
 			$arr = $this->fetchRow($res);
 			if ($arr !== false) {
@@ -615,7 +610,7 @@ abstract class base implements gnfDbinterface
 	public function sqlLines($sql)
 	{
 		$sql = $this->parseQuery(func_get_args());
-		$res = $this->sqlDo($sql);
+		$res = $this->sqlDoWithoutParsing($sql);
 		$ret = [];
 		if ($res) {
 			while ($arr = $this->fetchRow($res)) {
