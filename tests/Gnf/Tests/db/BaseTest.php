@@ -43,8 +43,16 @@ class BaseTest extends \PHPUnit_Framework_TestCase
 				['a' => sqlLike('any string')]
 			],
 			[
+				'`a` like "%any string?%"',
+				['a' => sqlLike('any string?')]
+			],
+			[
 				'`a` like "any prefix%"',
 				['a' => sqlLikeBegin('any prefix')]
+			],
+			[
+				'`a` like "any prefix?%"',
+				['a' => sqlLikeBegin('any prefix?')]
 			],
 			[
 				'`a` = __\'\'` + 123 + 5 + `alive`',
