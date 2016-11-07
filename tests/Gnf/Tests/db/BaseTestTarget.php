@@ -11,6 +11,11 @@ use Gnf\db\base;
  */
 class BaseTestTarget extends base
 {
+	public function __construct()
+	{
+		parent::__construct();
+	}
+
 	public function insert_id()
 	{
 	}
@@ -86,6 +91,7 @@ class BaseTestTarget extends base
 
 	/**
 	 * @param $handle
+	 *
 	 * @return int
 	 */
 	protected function getAffectedRows($handle)
