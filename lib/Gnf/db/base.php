@@ -13,6 +13,11 @@ abstract class base implements gnfDbinterface
 	private $transactionDepth = 0;
 	private $transactionError = false;
 
+	// needed for `parent::__construct()`
+	public function __construct()
+	{
+	}
+
 	public function getDb()
 	{
 		return $this->db;
