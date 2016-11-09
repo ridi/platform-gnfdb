@@ -371,6 +371,12 @@ class BaseTest extends \PHPUnit_Framework_TestCase
 				sqlTable(sqlTable('sqlTable'))
 			],
 			[
+				'`db1`.`table_1` 
+	join `db2`.`table_2`
+		on `db1`.`table_1`.`id` = `db2`.`table_2`.`id`',
+				sqlTable(sqlJoin(['db1.table_1.id' => 'db2.table_2.id']))
+			],
+			[
 				'`table_1` 
 	join `table_2`
 		on `table_1`.`id` = `table_2`.`id`',
@@ -406,6 +412,30 @@ class BaseTest extends \PHPUnit_Framework_TestCase
 							'table_11.id2',
 							'table_10.other_id2' => 'must_value_1',
 							'table_9.other_id2' => 'must_value_2',
+						]
+					]
+				)
+			],
+			[
+				'`db1`.`table_7` 
+	join `db1`.`table_8`
+		on `db1`.`table_7`.`id` = `db1`.`table_8`.`id` and `db1`.`table_8`.`other_id` = `db2`.`table_9`.`id` and `db1`.`table_8`.`other_id2` = `db2`.`table_9`.`id2` 
+	join `db2`.`table_9`
+		on `db2`.`table_10`.`id` = `db2`.`table_9`.`id2` and `db2`.`table_9`.`other_id2` = "must_value_2" 
+	join `db3`.`table_11`
+		on `db2`.`table_10`.`id` = `db3`.`table_11`.`id2` and `db2`.`table_10`.`other_id2` = "must_value_1"',
+				sqlJoin(
+					[
+						'db1.table_7.id' => [
+							'db1.table_8.id',
+							'db1.table_8.other_id' => sqlColumn('db2.table_9.id'),
+							'db1.table_8.other_id2' => sqlColumn('db2.table_9.id2'),
+						],
+						'db2.table_10.id' => [
+							'db2.table_9.id2',
+							'db3.table_11.id2',
+							'db2.table_10.other_id2' => 'must_value_1',
+							'db2.table_9.other_id2' => 'must_value_2',
 						]
 					]
 				)
