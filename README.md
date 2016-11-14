@@ -1,3 +1,7 @@
+# GnfDB
+
+[![Packagist](https://img.shields.io/packagist/v/ridibooks/platform-gnfdb.svg)](https://packagist.org/packages/ridibooks/platform-gnfdb)
+
 ## 0. 설치
 
 composer를 사용하여 설치 할 수 있다.
