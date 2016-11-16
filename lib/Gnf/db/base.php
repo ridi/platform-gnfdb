@@ -173,6 +173,18 @@ abstract class base implements gnfDbinterface
 				$key
 			) . ' and ' . self::escapeColumnName($key) . ' < ' . $this->escapeItemExceptNull($value->dat2, $key) . ')';
 		}
+		if (is_a($value, '\Gnf\db\Helper\GnfSqlAnd')) {
+			$ret = [];
+			foreach ($value->dat as $dat) {
+				if (is_array($dat)) {
+					$ret[] = '( ' . $this->serializeWhere($dat) . ' )';
+				}
+			}
+			if (count($ret)) {
+				return '( ' . implode(' and ', $ret) . ' )';
+			}
+			return '';
+		}
 		if (is_a($value, '\Gnf\db\Helper\GnfSqlOr')) {
 			$ret = [];
 			foreach ($value->dat as $dat) {
