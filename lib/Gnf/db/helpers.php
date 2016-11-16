@@ -1,6 +1,7 @@
 <?php
 
 use Gnf\db\Helper\GnfSqlAdd;
+use Gnf\db\Helper\GnfSqlAnd;
 use Gnf\db\Helper\GnfSqlBetween;
 use Gnf\db\Helper\GnfSqlColumn;
 use Gnf\db\Helper\GnfSqlGreater;
@@ -120,6 +121,42 @@ if (!function_exists('sqlWhere')) {
 	function sqlWhere(array $in)
 	{
 		return new GnfSqlWhere($in);
+	}
+}
+if (!function_exists('sqlAnd')) {
+	function sqlAnd()
+	{
+		$input = func_get_args();
+		$has_scalar_only = true;
+		foreach ($input as $v) {
+			if (!is_scalar($v)) {
+				$has_scalar_only = false;
+				break;
+			}
+		}
+		if ($has_scalar_only) {
+			return $input;
+		}
+
+		return new GnfSqlAnd($input);
+	}
+}
+if (!function_exists('sqlAndArray')) {
+	function sqlAndArray(array $args)
+	{
+		$input = $args;
+		$has_scalar_only = true;
+		foreach ($input as $v) {
+			if (!is_scalar($v)) {
+				$has_scalar_only = false;
+				break;
+			}
+		}
+		if ($has_scalar_only) {
+			return $input;
+		}
+
+		return new GnfSqlAnd($args);
 	}
 }
 if (!function_exists('sqlOr')) {
