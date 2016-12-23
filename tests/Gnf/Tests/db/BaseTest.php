@@ -67,10 +67,6 @@ class BaseTest extends \PHPUnit_Framework_TestCase
 				['a' => sqlOr(1, 2)]
 			],
 			[
-				'( ( `b` = "2" ) )',
-				['a' => sqlOr(1, ['b' => 2])]
-			],
-			[
 				'`c` is NULL',
 				['c' => sqlNull()]
 			],
@@ -159,12 +155,20 @@ class BaseTest extends \PHPUnit_Framework_TestCase
 				[sqlAndArray([['a' => 1], ['b' => 2]])]
 			],
 			[
+				'( ( ! ( `a` = "1" ) ) and ( `b` = "2" ) )',
+				[sqlAndArray([sqlNot(['a' => 1]), ['b' => 2]])]
+			],
+			[
 				'( ( `a` = "1" ) or ( `b` = "2" ) )',
 				[sqlOr(['a' => 1], ['b' => 2])]
 			],
 			[
 				'( ( `a` = "1" ) or ( `b` = "2" ) )',
 				[sqlOrArray([['a' => 1], ['b' => 2]])]
+			],
+			[
+				'( ( ! ( `a` = "1" ) ) or ( `b` = "2" ) )',
+				[sqlOrArray([sqlNot(['a' => 1]), ['b' => 2]])]
 			],
 			[
 				'( ( ( ( `a` = "1" ) and ( `b` = "2" ) ) ) or ( ( ( `a` = "3" ) and ( `b` = "4" ) ) ) )',
@@ -181,6 +185,10 @@ class BaseTest extends \PHPUnit_Framework_TestCase
 			[
 				'( ( ( ( `a` = "1" ) or ( `b` = "2" ) ) ) and ( ( ( `a` = "3" ) or ( `b` = "4" ) ) ) )',
 				[sqlAndArray([[sqlOrArray([['a' => 1], ['b' => 2]])], [sqlOrArray([['a' => 3], ['b' => 4]])]])]
+			],
+			[
+				'( ( !( `a` in ("1", "2", "3") ) ) or `a` is NULL )',
+				['a' => [sqlNot([1, 2, 3]), null]]
 			],
 			// injection test
 			[
@@ -199,6 +207,28 @@ class BaseTest extends \PHPUnit_Framework_TestCase
 				'`a` = "username=' . chr(0xbf) . '\\' . '\'' . '"',
 				['a' => "username=" . chr(0xbf) . "'"]
 			],
+		];
+	}
+
+
+	/**
+	 * @param $where
+	 *
+	 * @dataProvider providerWhereException
+	 * @expectedException InvalidArgumentException
+	 */
+	public function testWhereException($where)
+	{
+		$base = new BaseTestTarget;
+		$base->sqlDump('?', sqlWhere($where));
+	}
+
+	public function providerWhereException()
+	{
+		return [
+			[['a' => sqlOr(1, ['b' => 2])]],
+			[[sqlOrArray([sqlNot(['a' => 1]), null])]],
+			[[sqlAndArray([sqlNot(['a' => 1]), null])]],
 		];
 	}
 
@@ -278,6 +308,7 @@ class BaseTest extends \PHPUnit_Framework_TestCase
 	 * @param $insert
 	 *
 	 * @dataProvider providerInsertException
+	 * @expectedException InvalidArgumentException
 	 */
 	public function testInsertException($insert)
 	{
@@ -293,16 +324,10 @@ class BaseTest extends \PHPUnit_Framework_TestCase
 	{
 		return [
 			[
-				['sqlAdd' => sqlAdd(-1)]
+				[sqlAdd(-1)]
 			],
 			[
-				['sqlAdd' => sqlAdd(0)]
-			],
-			[
-				['sqlAdd' => sqlAdd(1)]
-			],
-			[
-				['sqlStrcat' => sqlStrcat(' more string')]
+				['asd']
 			],
 		];
 	}

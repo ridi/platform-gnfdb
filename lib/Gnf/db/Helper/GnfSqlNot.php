@@ -9,7 +9,7 @@ class GnfSqlNot extends GnfSqlCompareOperator
 		$this->dat = $in;
 	}
 
-	public static function isSwitchabe($in)
+	public static function isSwitchable($in)
 	{
 		return
 			is_a($in, '\Gnf\db\Helper\GnfSqlNot') &&

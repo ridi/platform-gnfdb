@@ -3,6 +3,7 @@
 namespace Gnf\db;
 
 use Exception;
+use Gnf\db\Helper\GnfSqlNot;
 use Gnf\db\Helper\GnfSqlNow;
 use Gnf\db\Superclass\gnfDbinterface;
 use InvalidArgumentException;
@@ -46,9 +47,11 @@ abstract class base implements gnfDbinterface
 	{
 		if ($this->transactionError) {
 			$this->sqlRollback();
+
 			return false;
 		} else {
 			$this->sqlCommit();
+
 			return true;
 		}
 	}
@@ -108,6 +111,7 @@ abstract class base implements gnfDbinterface
 
 		try {
 			$func($this);
+
 			return $this->sqlEnd();
 		} catch (Exception $e) {
 			$this->sqlRollback();
@@ -142,6 +146,7 @@ abstract class base implements gnfDbinterface
 			if (strlen($ret)) {
 				return '( !( ' . $ret . ' ) )';
 			}
+
 			return '';
 		}
 		if (is_a($value, '\Gnf\db\Helper\GnfSqlLike')) {
@@ -163,26 +168,33 @@ abstract class base implements gnfDbinterface
 			return self::escapeColumnName($key) . ' <= ' . $this->escapeItemExceptNull($value->dat, $key);
 		}
 		if (is_a($value, '\Gnf\db\Helper\GnfSqlBetween')) {
-			return self::escapeColumnName($key) . ' between ' . $this->escapeItemExceptNull(
-				$value->dat,
-				$key
-			) . ' and ' . $this->escapeItemExceptNull($value->dat2, $key);
+			return self::escapeColumnName($key) . ' between ' . $this->escapeItemExceptNull($value->dat, $key) . ' and ' .
+				$this->escapeItemExceptNull(
+					$value->dat2,
+					$key
+				);
 		}
 		if (is_a($value, '\Gnf\db\Helper\GnfSqlRange')) {
-			return '(' . $this->escapeItemExceptNull($value->dat, $key) . ' <= ' . self::escapeColumnName(
-				$key
-			) . ' and ' . self::escapeColumnName($key) . ' < ' . $this->escapeItemExceptNull($value->dat2, $key) . ')';
+			return '(' . $this->escapeItemExceptNull($value->dat, $key) . ' <= ' .
+				self::escapeColumnName(
+					$key
+				) . ' and ' . self::escapeColumnName($key) . ' < ' . $this->escapeItemExceptNull($value->dat2, $key) . ')';
 		}
 		if (is_a($value, '\Gnf\db\Helper\GnfSqlAnd')) {
 			$ret = [];
 			foreach ($value->dat as $dat) {
 				if (is_array($dat)) {
 					$ret[] = '( ' . $this->serializeWhere($dat) . ' )';
+				} elseif ($dat instanceof GnfSqlNot && is_array($dat->dat)) {
+					$ret[] = '( ! ( ' . $this->serializeWhere($dat->dat) . ' ) )';
+				} else {
+					throw new InvalidArgumentException('process sqlAnd needs where(key, value pair)');
 				}
 			}
 			if (count($ret)) {
 				return '( ' . implode(' and ', $ret) . ' )';
 			}
+
 			return '';
 		}
 		if (is_a($value, '\Gnf\db\Helper\GnfSqlOr')) {
@@ -190,12 +202,20 @@ abstract class base implements gnfDbinterface
 			foreach ($value->dat as $dat) {
 				if (is_array($dat)) {
 					$ret[] = '( ' . $this->serializeWhere($dat) . ' )';
+				} elseif ($dat instanceof GnfSqlNot && is_array($dat->dat)) {
+					$ret[] = '( ! ( ' . $this->serializeWhere($dat->dat) . ' ) )';
+				} else {
+					throw new InvalidArgumentException('process sqlOr needs where(key, value pair)');
 				}
 			}
 			if (count($ret)) {
 				return '( ' . implode(' or ', $ret) . ' )';
 			}
+
 			return '';
+		}
+		if (is_int($key)) {
+			throw new InvalidArgumentException('cannot implict int key as column : ' . $key);
 		}
 		if (is_array($value)) {
 			//divide
@@ -231,6 +251,7 @@ abstract class base implements gnfDbinterface
 			if (strlen($objects_query) && strlen($scalars_query)) {
 				return '( ' . $objects_query . ' or ' . $scalars_query . ' )';
 			}
+
 			return $objects_query . $scalars_query;
 		}
 
@@ -244,6 +265,7 @@ abstract class base implements gnfDbinterface
 		}
 		$wheres = array_map([&$this, 'callbackSerializeWhere'], array_keys($array), $array);
 		$wheres = array_filter($wheres, 'strlen');
+
 		return implode(' and ', $wheres);
 	}
 
@@ -252,6 +274,7 @@ abstract class base implements gnfDbinterface
 		if (is_a($value, '\Gnf\db\Helper\GnfSqlNull') || is_null($value)) {
 			return self::escapeColumnName($key) . ' = NULL';
 		}
+
 		return self::escapeColumnName($key) . ' = ' . $this->escapeItemExceptNull($value, $key);
 	}
 
@@ -344,11 +367,13 @@ abstract class base implements gnfDbinterface
 					}
 				}
 			}
+
 			return $ret;
 		}
 		if (is_a($a, '\Gnf\db\Helper\GnfSqlTable')) {
 			$a = $a->dat;
 		}
+
 		return self::escapeTableNameFromTableElement($a);
 	}
 
@@ -361,6 +386,7 @@ abstract class base implements gnfDbinterface
 	{
 		$table_column_element = preg_replace("/\..+/", "", $table_column_element);
 		$table_column_element = str_replace('`', '', $table_column_element);
+
 		return '`' . $table_column_element . '`';
 	}
 
@@ -372,16 +398,24 @@ abstract class base implements gnfDbinterface
 		}
 		$fullsized_column_items = explode('.', $fullsized_column);
 		array_pop($fullsized_column_items);
-		$fullsized_column_items = array_map(function ($item) {
-			return self::escapeFullColumnElement($item);
-		}, $fullsized_column_items);
+		$fullsized_column_items = array_map(
+			function ($item) {
+				return self::escapeFullColumnElement($item);
+			},
+			$fullsized_column_items
+		);
+
 		return implode('.', $fullsized_column_items);
 	}
 
 	private static function escapeColumnName($k)
 	{
+		if (is_int($k)) {
+			throw new InvalidArgumentException('cannot implict int key as column : ' . $k);
+		}
 		$k = str_replace('`', '', $k);
 		$k = str_replace('.', '`.`', $k);
+
 		return '`' . $k . '`';
 	}
 
@@ -396,6 +430,7 @@ abstract class base implements gnfDbinterface
 		if (is_a($value, '\Gnf\db\Helper\GnfSqlNull') || is_null($value)) {
 			return 'NULL';
 		}
+
 		return $this->escapeItemExceptNull($value);
 	}
 
@@ -415,11 +450,13 @@ abstract class base implements gnfDbinterface
 					return 'false';
 				}
 			}
+
 			return '"' . $this->escapeLiteral($value) . '"';
 		} elseif (is_array($value)) {
 			if (count($value) == 0) {
 				throw new InvalidArgumentException('zero size array, key : ' . $value);
 			}
+
 			return '(' . implode(', ', array_map([&$this, 'escapeItemExceptNull'], $value)) . ')';
 		} elseif (is_object($value)) {
 			if (is_a($value, GnfSqlNow::class)) {
@@ -446,12 +483,14 @@ abstract class base implements gnfDbinterface
 				} elseif ($value->dat < 0) {
 					return self::escapeColumnName($column) . ' ' . ($value->dat);
 				}
+
 				return self::escapeColumnName($column);
 			} elseif (is_a($value, '\Gnf\db\Helper\GnfSqlStrcat') && is_string($column)) {//only for update
 				return 'concat(ifnull(' . self::escapeColumnName($column) . ', ""), ' . $this->escapeItemExceptNull(
-					$value->dat
-				) . ')';
+						$value->dat
+					) . ')';
 			}
+
 			return $this->escapeItemExceptNull($value->dat);
 		}
 		throw new InvalidArgumentException('invalid escape item');
@@ -477,8 +516,10 @@ abstract class base implements gnfDbinterface
 			if (count($escaped_items) != 0) {
 				throw new InvalidArgumentException('unmatched "? count" with "argument count"');
 			}
+
 			return implode('', $breaked_sql_blocks);
 		}
+
 		return "";
 	}
 
@@ -495,6 +536,7 @@ abstract class base implements gnfDbinterface
 		if (count($this->dump)) {
 			return array_pop($this->dump);
 		}
+
 		return null;
 	}
 
@@ -502,6 +544,7 @@ abstract class base implements gnfDbinterface
 	{
 		$sql = $this->parseQuery(func_get_args());
 		$ret = $this->sqlDoWithoutParsing($sql);
+
 		return $ret;
 	}
 
@@ -524,6 +567,7 @@ abstract class base implements gnfDbinterface
 			$this->transactionError = true;
 			throw new Exception('[sql error] ' . $err->message . ' : ' . $sql);
 		}
+
 		return $ret;
 	}
 
@@ -542,6 +586,7 @@ abstract class base implements gnfDbinterface
 				return $arr[0];
 			}
 		}
+
 		return null;
 	}
 
@@ -555,6 +600,7 @@ abstract class base implements gnfDbinterface
 				$ret[] = $arr[0];
 			}
 		}
+
 		return $ret;
 	}
 
@@ -568,6 +614,7 @@ abstract class base implements gnfDbinterface
 				return $arr;
 			}
 		}
+
 		return null;
 	}
 
@@ -581,6 +628,7 @@ abstract class base implements gnfDbinterface
 				$ret[] = $arr;
 			}
 		}
+
 		return $ret;
 	}
 
@@ -594,6 +642,7 @@ abstract class base implements gnfDbinterface
 				return $arr;
 			}
 		}
+
 		return null;
 	}
 
@@ -607,6 +656,7 @@ abstract class base implements gnfDbinterface
 				$ret[] = $arr;
 			}
 		}
+
 		return $ret;
 	}
 
@@ -620,6 +670,7 @@ abstract class base implements gnfDbinterface
 				return $arr;
 			}
 		}
+
 		return null;
 	}
 
@@ -633,6 +684,7 @@ abstract class base implements gnfDbinterface
 				$ret[] = $arr;
 			}
 		}
+
 		return $ret;
 	}
 
@@ -646,6 +698,7 @@ abstract class base implements gnfDbinterface
 				return $arr;
 			}
 		}
+
 		return null;
 	}
 
@@ -659,6 +712,7 @@ abstract class base implements gnfDbinterface
 				$ret[] = $arr;
 			}
 		}
+
 		return $ret;
 	}
 
@@ -671,12 +725,14 @@ abstract class base implements gnfDbinterface
 		}
 		array_unshift($args[1], $args[0]);
 		$args = $args[1];
+
 		return @call_user_func_array([&$this, 'sqlDicts'], $args);
 	}
 
 	public function sqlCount($table, $where)
 	{
 		$sql = "SELECT count(*) FROM ? WHERE ?";
+
 		return $this->sqlData($sql, sqlTable($table), sqlWhere($where));
 	}
 
@@ -688,6 +744,7 @@ abstract class base implements gnfDbinterface
 		$values = implode(', ', array_map([&$this, 'escapeItem'], $dats, $dats_keys));
 		$sql = "INSERT INTO " . $table . " (" . $keys . ") VALUES (" . $values . ")";
 		$stmt = $this->sqlDoWithoutParsing($sql);
+
 		return $this->getAffectedRows($stmt);
 	}
 
@@ -712,6 +769,7 @@ abstract class base implements gnfDbinterface
 		}
 		$sql = substr($sql, 0, -1);
 		$stmt = $this->sqlDoWithoutParsing($sql);
+
 		return $this->getAffectedRows($stmt);
 	}
 
@@ -733,6 +791,7 @@ abstract class base implements gnfDbinterface
 		$update = $this->serializeUpdate($update);
 		$sql = "INSERT INTO " . $table . " (" . $keys . ") VALUES (" . $values . ") ON DUPLICATE KEY UPDATE " . $update;
 		$stmt = $this->sqlDoWithoutParsing($sql);
+
 		return min(1, $this->getAffectedRows($stmt));
 	}
 
@@ -743,6 +802,7 @@ abstract class base implements gnfDbinterface
 		$where = $this->serializeWhere($where);
 		$sql = "UPDATE " . $table . " SET " . $update . " WHERE " . $where;
 		$stmt = $this->sqlDoWithoutParsing($sql);
+
 		return $this->getAffectedRows($stmt);
 	}
 
@@ -752,6 +812,7 @@ abstract class base implements gnfDbinterface
 		$where = $this->serializeWhere($where);
 		$sql = "DELETE FROM " . $table . " WHERE " . $where;
 		$stmt = $this->sqlDoWithoutParsing($sql);
+
 		return $this->getAffectedRows($stmt);
 	}
 

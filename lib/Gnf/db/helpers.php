@@ -48,8 +48,10 @@ if (!function_exists('sqlLike')) {
 		//__sqlNot을 포함관계에서 최상단으로
 		if (is_a($in, '\Gnf\db\Helper\GnfSqlNot') && is_a($in->dat, '\Gnf\db\Helper\GnfSqlCompareOperator')) {
 			$wrapper = new GnfSqlLike($in->dat);
+
 			return new GnfSqlNot($wrapper);
 		}
+
 		return new GnfSqlLike($in);
 	}
 
@@ -60,8 +62,10 @@ if (!function_exists('sqlLikeBegin')) {
 		//__sqlNot을 포함관계에서 최상단으로
 		if (is_a($in, '\Gnf\db\Helper\GnfSqlNot') && is_a($in->dat, '\Gnf\db\Helper\GnfSqlCompareOperator')) {
 			$wrapper = new GnfSqlLikeBegin($in->dat);
+
 			return new GnfSqlNot($wrapper);
 		}
+
 		return new GnfSqlLikeBegin($in);
 	}
 }
@@ -78,6 +82,7 @@ if (!function_exists('sqlTable')) {
 		if (is_a($in, '\Gnf\db\Helper\GnfSqlTable')) {
 			return $in;
 		}
+
 		return new GnfSqlTable($in);
 	}
 }
@@ -87,6 +92,7 @@ if (!function_exists('sqlColumn')) {
 		if (is_a($in, '\Gnf\db\Helper\GnfSqlColumn')) {
 			return $in;
 		}
+
 		return new GnfSqlColumn($in);
 	}
 }
@@ -96,6 +102,7 @@ if (!function_exists('sqlJoin')) {
 		if (!is_array($in)) {
 			$in = func_get_args();
 		}
+
 		return new GnfSqlJoin($in, $type);
 	}
 }
@@ -105,6 +112,7 @@ if (!function_exists('sqlLeftJoin')) {
 		if (!is_array($in)) {
 			$in = func_get_args();
 		}
+
 		return new GnfSqlJoin($in, 'left join');
 	}
 }
@@ -114,6 +122,7 @@ if (!function_exists('sqlInnerJoin')) {
 		if (!is_array($in)) {
 			$in = func_get_args();
 		}
+
 		return new GnfSqlJoin($in, 'inner join');
 	}
 }
@@ -129,7 +138,8 @@ if (!function_exists('sqlAnd')) {
 		$input = func_get_args();
 		$has_scalar_only = true;
 		foreach ($input as $v) {
-			if (!is_scalar($v)) {
+			$is_could_treat_as_scalar = (is_scalar($v) || $v instanceof GnfSqlNot);
+			if (!($is_could_treat_as_scalar)) {
 				$has_scalar_only = false;
 				break;
 			}
@@ -147,7 +157,8 @@ if (!function_exists('sqlAndArray')) {
 		$input = $args;
 		$has_scalar_only = true;
 		foreach ($input as $v) {
-			if (!is_scalar($v)) {
+			$is_could_treat_as_scalar = (is_scalar($v) || $v instanceof GnfSqlNot);
+			if (!($is_could_treat_as_scalar)) {
 				$has_scalar_only = false;
 				break;
 			}
@@ -165,7 +176,8 @@ if (!function_exists('sqlOr')) {
 		$input = func_get_args();
 		$has_scalar_only = true;
 		foreach ($input as $v) {
-			if (!is_scalar($v)) {
+			$is_could_treat_as_scalar = (is_scalar($v) || $v instanceof GnfSqlNot);
+			if (!($is_could_treat_as_scalar)) {
 				$has_scalar_only = false;
 				break;
 			}
@@ -183,7 +195,8 @@ if (!function_exists('sqlOrArray')) {
 		$input = $args;
 		$has_scalar_only = true;
 		foreach ($input as $v) {
-			if (!is_scalar($v)) {
+			$is_could_treat_as_scalar = (is_scalar($v) || $v instanceof GnfSqlNot);
+			if (!($is_could_treat_as_scalar)) {
 				$has_scalar_only = false;
 				break;
 			}
@@ -199,9 +212,10 @@ if (!function_exists('sqlNot')) {
 	function sqlNot($in)
 	{
 		//부정의 부정은 긍정
-		if (GnfSqlNot::isSwitchabe($in)) {
+		if (GnfSqlNot::isSwitchable($in)) {
 			return $in->dat;
 		}
+
 		return new GnfSqlNot($in);
 	}
 }
@@ -209,10 +223,12 @@ if (!function_exists('sqlGreaterEqual')) {
 	function sqlGreaterEqual($in)
 	{
 		//__sqlNot을 포함관계에서 최상단으로
-		if (GnfSqlNot::isSwitchabe($in)) {
+		if (GnfSqlNot::isSwitchable($in)) {
 			$wrapper = new GnfSqlGreaterEqual($in->dat);
+
 			return new GnfSqlNot($wrapper);
 		}
+
 		return new GnfSqlGreaterEqual($in);
 	}
 }
@@ -220,10 +236,12 @@ if (!function_exists('sqlGreater')) {
 	function sqlGreater($in)
 	{
 		//__sqlNot을 포함관계에서 최상단으로
-		if (GnfSqlNot::isSwitchabe($in)) {
+		if (GnfSqlNot::isSwitchable($in)) {
 			$wrapper = new GnfSqlGreater($in->dat);
+
 			return new GnfSqlNot($wrapper);
 		}
+
 		return new GnfSqlGreater($in);
 	}
 }
@@ -231,10 +249,12 @@ if (!function_exists('sqlLesserEqual')) {
 	function sqlLesserEqual($in)
 	{
 		//__sqlNot을 포함관계에서 최상단으로
-		if (GnfSqlNot::isSwitchabe($in)) {
+		if (GnfSqlNot::isSwitchable($in)) {
 			$wrapper = new GnfSqlLesserEqual($in->dat);
+
 			return new GnfSqlNot($wrapper);
 		}
+
 		return new GnfSqlLesserEqual($in);
 	}
 
@@ -243,10 +263,12 @@ if (!function_exists('sqlLesser')) {
 	function sqlLesser($in)
 	{
 		//__sqlNot을 포함관계에서 최상단으로
-		if (GnfSqlNot::isSwitchabe($in)) {
+		if (GnfSqlNot::isSwitchable($in)) {
 			$wrapper = new GnfSqlLike($in->dat);
+
 			return new GnfSqlNot($wrapper);
 		}
+
 		return new GnfSqlLesser($in);
 	}
 }
@@ -269,6 +291,7 @@ if (!function_exists('sqlLimit')) {
 		if (count($in) == 1) {
 			return new GnfSqlLimit(0, $in[0]);
 		}
+
 		return new GnfSqlLimit($in[0], $in[1]);
 	}
 }
