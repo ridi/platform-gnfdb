@@ -1,6 +1,8 @@
 # GnfDB
 
-[![Packagist](https://img.shields.io/packagist/v/ridibooks/platform-gnfdb.svg)](https://packagist.org/packages/ridibooks/platform-gnfdb)
+[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/ridibooks/platform-gnfdb/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/ridibooks/platform-gnfdb/?branch=master)
+[![Latest Stable Version](https://poser.pugx.org/ridibooks/platform-gnfdb/v/stable)](https://packagist.org/packages/ridibooks/platform-gnfdb)
+[![License](https://poser.pugx.org/ridibooks/platform-gnfdb/license)](https://packagist.org/packages/ridibooks/platform-gnfdb)
 
 ## 0. 설치
 
