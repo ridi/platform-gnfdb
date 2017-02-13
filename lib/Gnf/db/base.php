@@ -355,7 +355,7 @@ abstract class base implements gnfDbinterface
 									self::escapeColumnName($join_right_column);
 							}
 							$join_right_table_name = self::escapeTableNameFromFullColumnElement($join_right_column);
-							if ($joinable_where_clause[$join_right_table_name]) {
+							if (isset($joinable_where_clause[$join_right_table_name])) {
 								$ret .= ' and '
 									. $this->serializeWhere($joinable_where_clause[$join_right_table_name]);
 								unset($joinable_where_clause[$join_right_table_name]);
