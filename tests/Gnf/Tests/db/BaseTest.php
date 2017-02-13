@@ -159,6 +159,10 @@ class BaseTest extends \PHPUnit_Framework_TestCase
 				[sqlAndArray([sqlNot(['a' => 1]), ['b' => 2]])]
 			],
 			[
+				'( ( ! ( `a` = "1" ) ) and ( `a` is NULL ) )',
+				[sqlAndArray([sqlNot(['a' => 1]), ['a' => null]])]
+			],
+			[
 				'( ( `a` = "1" ) or ( `b` = "2" ) )',
 				[sqlOr(['a' => 1], ['b' => 2])]
 			],
@@ -169,6 +173,10 @@ class BaseTest extends \PHPUnit_Framework_TestCase
 			[
 				'( ( ! ( `a` = "1" ) ) or ( `b` = "2" ) )',
 				[sqlOrArray([sqlNot(['a' => 1]), ['b' => 2]])]
+			],
+			[
+				'( ( ! ( `a` = "1" ) ) or ( `a` is NULL ) )',
+				[sqlOrArray([sqlNot(['a' => 1]), ['a' => null]])]
 			],
 			[
 				'( ( ( ( `a` = "1" ) and ( `b` = "2" ) ) ) or ( ( ( `a` = "3" ) and ( `b` = "4" ) ) ) )',
@@ -189,6 +197,10 @@ class BaseTest extends \PHPUnit_Framework_TestCase
 			[
 				'( ( !( `a` in ("1", "2", "3") ) ) or `a` is NULL )',
 				['a' => [sqlNot([1, 2, 3]), null]]
+			],
+			[
+				'( ( !( `a` = "1" ) ) or `a` is NULL )',
+				['a' => [sqlNot(1), null]]
 			],
 			// injection test
 			[
