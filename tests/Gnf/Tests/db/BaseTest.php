@@ -382,6 +382,39 @@ class BaseTest extends \PHPUnit_Framework_TestCase
 		];
 	}
 
+    /**
+     * @param $sql
+     * @param $keys
+     * @param $values
+     *
+     * @dataProvider providerUpsertBulk
+     */
+    public function testUpsertBulk($sql, $keys, $values)
+    {
+        $base = new BaseTestTarget;
+
+        $base->sqlDumpBegin();
+        $base->sqlInsertOrUpdateBulk('TABLE', $keys, $values);
+        $dump = $base->sqlDumpEnd();
+        $this->assertEquals($sql, $dump[0]);
+    }
+
+    public function providerUpsertBulk()
+    {
+        return [
+            [
+                'INSERT INTO `TABLE` (`key`, `data1`, `data2`) VALUES ( password("password"), now(), NULL ), ' .
+                '( "123", "456", "789" )' .
+                ' ON DUPLICATE KEY UPDATE `key` = VALUES ( `key` ), `data1` = VALUES ( `data1` ), `data2` = VALUES ( `data2` )',
+                ['key', 'data1', 'data2'],
+                [
+                    [sqlPassword('password'), sqlNow(), sqlNull()],
+                    ['123', '456', '789'],
+                ],
+            ]
+        ];
+    }
+
 	/**
 	 * @param $sql
 	 * @param $update
