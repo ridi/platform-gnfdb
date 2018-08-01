@@ -385,16 +385,16 @@ class BaseTest extends \PHPUnit_Framework_TestCase
     /**
      * @param $sql
      * @param $keys
-     * @param $values
+     * @param $valuess
      *
      * @dataProvider providerUpsertBulk
      */
-    public function testUpsertBulk($sql, $keys, $values)
+    public function testUpsertBulk($sql, $keys, $valuess)
     {
         $base = new BaseTestTarget;
 
         $base->sqlDumpBegin();
-        $base->sqlInsertOrUpdateBulk('TABLE', $keys, $values);
+        $base->sqlInsertOrUpdateBulk('TABLE', $keys, $valuess);
         $dump = $base->sqlDumpEnd();
         $this->assertEquals($sql, $dump[0]);
     }
