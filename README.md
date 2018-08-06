@@ -288,8 +288,8 @@ CRUD 중 다음 method를 지원한다.
 - sqlDelete(table, where)
 - sqlInsertOrUpdate(table, data, update_where = null) - INSERT INTO ~~ ON DUPLICATE KEY UPDATE 구문
 
-- sqlInsertBulk(table, dat_keys, dat_valuess) - Bulk용 sqlInsert
-- sqlInsertOrUpdateBulk(table, dat_keys, dat_valuess) - Bulk용 sqlInsertOrUpdate
+- sqlInsertBulk(table, data_keys, data_valuess) - Bulk용 sqlInsert
+- sqlInsertOrUpdateBulk(table, data_keys, data_valuess) - Bulk용 sqlInsertOrUpdate
 
 변수는 다음과 같다.
 
