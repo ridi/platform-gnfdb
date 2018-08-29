@@ -748,13 +748,6 @@ abstract class base implements gnfDbinterface
 		return $this->getAffectedRows($stmt);
 	}
 
-	/**
-	 * @param       $table
-	 * @param array $dat_keys
-	 * @param array $dat_valuess
-	 *
-	 * @return int
-	 */
 	public function sqlInsertBulk($table, $dat_keys, $dat_valuess)
 	{
 		$table = $this->escapeItemExceptNull(sqlTable($table));
@@ -794,6 +787,33 @@ abstract class base implements gnfDbinterface
 
 		return min(1, $this->getAffectedRows($stmt));
 	}
+
+    public function sqlInsertOrUpdateBulk($table, $dat_keys, $dat_valuess)
+    {
+        $table = $this->escapeItemExceptNull(sqlTable($table));
+        $escape_dat_keys = array_map([&$this, 'escapeColumnName'], $dat_keys);
+
+        $keys = implode(', ', $escape_dat_keys);
+
+        $bulk_values = [];
+        foreach ($dat_valuess as $dat_values) {
+            $bulk_values[] = implode(', ', array_map([&$this, 'escapeItem'], $dat_values));
+        }
+        $sql = "INSERT INTO " . $table . " (" . $keys . ") VALUES";
+        foreach ($bulk_values as $values) {
+            $sql .= ' ( ' . $values . ' ),';
+        }
+        $sql = substr($sql, 0, -1);
+        $sql .= " ON DUPLICATE KEY UPDATE";
+        foreach ($escape_dat_keys as $escape_dat_key) {
+            $sql .= ' ' . $escape_dat_key . ' = VALUES ( ' . $escape_dat_key . ' ),';
+        }
+        $sql = substr($sql, 0, -1);
+
+        $stmt = $this->sqlDoWithoutParsing($sql);
+
+        return $this->getAffectedRows($stmt);
+    }
 
 	public function sqlUpdate($table, $dats, $where)
 	{
