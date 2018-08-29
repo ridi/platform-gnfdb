@@ -295,6 +295,8 @@ CRUD 중 다음 method를 지원한다.
 
 - table - 단일 테이블 명 (sqlTable을 적용하지 않은)
 - data - 추가/수정 할 데이터 배열, column => value 로 구성되어야 함
+   - data_keys 추가/수정 할 데이터의 키 배열
+   - data_valuess 추가/수정 할 데이터 배열 나열, [[column => value], [column => value] ... ] 로 구성되어야 함
 - where, update_where - 조건 문 (sqlWhere을 없어도 됨)
 
 ## 5. transaction
