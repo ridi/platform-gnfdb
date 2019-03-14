@@ -18,9 +18,18 @@ class PDO extends base
         $this->db = $pdo;
     }
 
-    public function select_db($db)
+    public function selectDb($db)
     {
         $this->select_db = $db;
+    }
+
+    /**
+     * @deprecated use selectDb($db)
+     * @param $db
+     */
+    public function select_db($db)
+    {
+        $this->selectDb($db);
     }
 
     /*
@@ -30,7 +39,7 @@ class PDO extends base
     protected function escapeLiteral($value)
     {
         if (!is_string($value)) {
-            $value = strval($value);
+            $value = (string)$value;
         }
 
         return str_replace(
@@ -103,9 +112,18 @@ class PDO extends base
         return $handle->fetch(\PDO::FETCH_BOTH);
     }
 
-    public function insert_id()
+    public function insertId()
     {
         return $this->db->lastInsertId();
+    }
+
+    /**
+     * @deprecated use insertId()
+     * @return string
+     */
+    public function insert_id()
+    {
+        return $this->insertId();
     }
 
     /**

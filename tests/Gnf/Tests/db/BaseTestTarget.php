@@ -3,17 +3,15 @@ namespace Gnf\Tests\db;
 
 use Gnf\db\base;
 
-/**
- * Created by PhpStorm.
- * User: ridi
- * Date: 2016-04-01
- * Time: 오후 5:07
- */
 class BaseTestTarget extends base
 {
 	public function __construct()
 	{
 		parent::__construct();
+	}
+
+	public function insertId()
+	{
 	}
 
 	public function insert_id()
@@ -25,6 +23,10 @@ class BaseTestTarget extends base
 	}
 
 	protected function hasConnected()
+	{
+	}
+
+	public function selectDb($db)
 	{
 	}
 

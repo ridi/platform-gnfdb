@@ -10,10 +10,13 @@ use InvalidArgumentException;
 
 abstract class base implements gnfDbinterface
 {
-    private $dump;
+    /** @var array */
+    private $dump = [];
     protected $db;
-    private $transactionDepth = 0;
-    private $transactionError = false;
+    /** @var int */
+    private $transaction_depth = 0;
+    /** @var bool */
+    private $is_transaction_error = false;
 
     // needed for `parent::__construct()`
     public function __construct()
@@ -32,20 +35,20 @@ abstract class base implements gnfDbinterface
 
     public function sqlBegin()
     {
-        if ($this->transactionDepth == 0) {
+        if ($this->transaction_depth === 0) {
             $this->transactionBegin();
-            $this->transactionError = false;
+            $this->is_transaction_error = false;
         } else {
             if ($this->configIsSupportNestedTransaction()) {
                 $this->transactionBegin();
             }
         }
-        $this->transactionDepth++;
+        $this->transaction_depth++;
     }
 
     public function sqlEnd()
     {
-        if ($this->transactionError) {
+        if ($this->is_transaction_error) {
             $this->sqlRollback();
 
             return false;
@@ -58,15 +61,15 @@ abstract class base implements gnfDbinterface
 
     public function sqlCommit()
     {
-        $this->transactionDepth--;
-        if ($this->transactionDepth == 0) {
+        $this->transaction_depth--;
+        if ($this->transaction_depth === 0) {
             $this->transactionCommit();
-            $this->transactionError = false;
+            $this->is_transaction_error = false;
         } else {
             if ($this->configIsSupportNestedTransaction()) {
                 $this->transactionCommit();
             }
-            if ($this->transactionDepth < 0) {
+            if ($this->transaction_depth < 0) {
                 throw new Exception('[mysql] transaction underflow');
             }
         }
@@ -74,15 +77,15 @@ abstract class base implements gnfDbinterface
 
     public function sqlRollback()
     {
-        $this->transactionDepth--;
-        if ($this->transactionDepth == 0) {
+        $this->transaction_depth--;
+        if ($this->transaction_depth === 0) {
             $this->transactionRollback();
-            $this->transactionError = false;
+            $this->is_transaction_error = false;
         } else {
             if ($this->configIsSupportNestedTransaction()) {
                 $this->transactionRollback();
             }
-            if ($this->transactionDepth < 0) {
+            if ($this->transaction_depth < 0) {
                 throw new Exception('[mysql] transaction underflow');
             }
         }
@@ -90,7 +93,7 @@ abstract class base implements gnfDbinterface
 
     public function isTransactionActive()
     {
-        return $this->transactionDepth > 0;
+        return $this->transaction_depth > 0;
     }
 
     /**
@@ -260,8 +263,8 @@ abstract class base implements gnfDbinterface
 
     private function serializeWhere($array)
     {
-        if (count($array) == 0) {
-            throw new InvalidArgumentException('zero size array can not serialize : ' . $array);
+        if (count($array) === 0) {
+            throw new InvalidArgumentException('zero size array can not serialize');
         }
         $wheres = array_map([&$this, 'callbackSerializeWhere'], array_keys($array), $array);
         $wheres = array_filter($wheres, 'strlen');
@@ -303,7 +306,7 @@ abstract class base implements gnfDbinterface
                 if ($has_join_only_one_column) {
                     $last_column = '';
                     foreach ($columns as $key_of_column => $column) {
-                        if (strlen($ret) == 0) {
+                        if (strlen($ret) === 0) {
                             $ret .= self::escapeTableNameFromFullColumnElement($column);
                         } else {
                             $ret .=
@@ -393,7 +396,7 @@ abstract class base implements gnfDbinterface
     private static function escapeTableNameFromFullColumnElement($fullsized_column)
     {
         $dot_count = substr_count($fullsized_column, '.');
-        if ($dot_count != 1 && $dot_count != 2) {
+        if ($dot_count !== 1 && $dot_count !== 2) {
             throw new Exception('invalid column name (' . $fullsized_column . ') to extract table name');
         }
         $fullsized_column_items = explode('.', $fullsized_column);
@@ -453,8 +456,8 @@ abstract class base implements gnfDbinterface
 
             return '"' . $this->escapeLiteral($value) . '"';
         } elseif (is_array($value)) {
-            if (count($value) == 0) {
-                throw new InvalidArgumentException('zero size array, key : ' . $value);
+            if (count($value) === 0) {
+                throw new InvalidArgumentException('zero size array, key : ' . (string)$column);
             }
 
             return '(' . implode(', ', array_map([&$this, 'escapeItemExceptNull'], $value)) . ')';
@@ -504,16 +507,16 @@ abstract class base implements gnfDbinterface
 
             $breaked_sql_blocks = explode('?', $sql);
             foreach ($breaked_sql_blocks as $index => $breaked_sql_block) {
-                if ($index == 0) {
+                if ($index === 0) {
                     continue;
                 }
-                if (count($escaped_items) == 0) {
+                if (count($escaped_items) === 0) {
                     throw new InvalidArgumentException('unmatched "? count" with "argument count"');
                 }
                 $escaped_item = array_shift($escaped_items);
                 $breaked_sql_blocks[$index] = $escaped_item . $breaked_sql_block;
             }
-            if (count($escaped_items) != 0) {
+            if (count($escaped_items) !== 0) {
                 throw new InvalidArgumentException('unmatched "? count" with "argument count"');
             }
 
@@ -528,7 +531,7 @@ abstract class base implements gnfDbinterface
         if (!is_array($this->dump)) {
             $this->dump = [];
         }
-        array_push($this->dump, []);
+        $this->dump[] = [];
     }
 
     public function sqlDumpEnd()
@@ -558,13 +561,13 @@ abstract class base implements gnfDbinterface
     {
         if (count($this->dump)) {
             foreach ($this->dump as $k => $v) {
-                array_push($this->dump[$k], $sql);
+                $this->dump[$k][] = $sql;
             }
         }
         $ret = $this->query($sql);
         $err = $this->getError($ret);
         if ($err !== null) {
-            $this->transactionError = true;
+            $this->is_transaction_error = true;
             throw new Exception('[sql error] ' . $err->message . ' : ' . $sql);
         }
 
@@ -773,7 +776,7 @@ abstract class base implements gnfDbinterface
          * 따라서 update 에 해당하는 것만 따로 받을 수 있도록 수정하였음.
          * 이 후 MySQL 버전에서 이 문제가 해결되면 $update 변수는 삭제될 예정.
          */
-        if ($update == null) {
+        if ($update === null) {
             $update = $dats;
         }
 
@@ -848,6 +851,12 @@ abstract class base implements gnfDbinterface
 
     abstract protected function hasConnected();
 
+    abstract public function selectDb($db);
+
+    /**
+     * @deprecated use selectDb($db)
+     * @param $db
+     */
     abstract public function select_db($db);
 
     abstract protected function transactionBegin();
