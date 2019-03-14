@@ -3,5 +3,5 @@ namespace Gnf\db\Helper;
 
 class GnfSqlCompareOperator
 {
-	public $dat;
+    public $dat;
 }

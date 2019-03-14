@@ -4,11 +4,11 @@ namespace Gnf\db\Helper;
 
 class GnfSqlJoin extends GnfSqlTable
 {
-	public $type;
+    public $type;
 
-	public function __construct($in, $type = 'join')
-	{
-		parent::__construct($in);
-		$this->type = $type;
-	}
+    public function __construct($in, $type = 'join')
+    {
+        parent::__construct($in);
+        $this->type = $type;
+    }
 }
