@@ -23,15 +23,6 @@ class PDO extends base
         $this->select_db = $db;
     }
 
-    /**
-     * @deprecated use selectDb($db)
-     * @param $db
-     */
-    public function select_db($db)
-    {
-        $this->selectDb($db);
-    }
-
     /*
      * addslashes is not safe in multibyte
      * str_replace is safe in multibyte but only utf-8
@@ -115,15 +106,6 @@ class PDO extends base
     public function insertId()
     {
         return $this->db->lastInsertId();
-    }
-
-    /**
-     * @deprecated use insertId()
-     * @return string
-     */
-    public function insert_id()
-    {
-        return $this->insertId();
     }
 
     /**

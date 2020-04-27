@@ -44,10 +44,4 @@ interface gnfDbinterface
     public function sqlDelete($table, $where);
 
     public function insertId();
-
-    /**
-     * @deprecated use insertId()
-     * @return mixed
-     */
-    public function insert_id();
 }

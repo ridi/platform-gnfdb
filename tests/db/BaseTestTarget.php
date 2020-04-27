@@ -14,10 +14,6 @@ class BaseTestTarget extends base
     {
     }
 
-    public function insert_id()
-    {
-    }
-
     protected function doConnect()
     {
     }
@@ -27,10 +23,6 @@ class BaseTestTarget extends base
     }
 
     public function selectDb($db)
-    {
-    }
-
-    public function select_db($db)
     {
     }
 

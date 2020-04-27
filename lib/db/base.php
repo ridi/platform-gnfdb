@@ -853,12 +853,6 @@ abstract class base implements gnfDbinterface
 
     abstract public function selectDb($db);
 
-    /**
-     * @deprecated use selectDb($db)
-     * @param $db
-     */
-    abstract public function select_db($db);
-
     abstract protected function transactionBegin();
 
     abstract protected function transactionCommit();
