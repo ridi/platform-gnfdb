@@ -2,10 +2,17 @@
 
 namespace Gnf\Tests\db;
 
-use InvalidArgumentException;
+use PHPUnit\Framework\TestCase;
 
-class BaseTest extends \PHPUnit_Framework_TestCase
+class BaseTest extends TestCase
 {
+    private $base;
+
+    public function setUp(): void
+    {
+        $this->base = new BaseTestTarget();
+    }
+
     /**
      * @param $sql
      * @param $where
@@ -14,9 +21,7 @@ class BaseTest extends \PHPUnit_Framework_TestCase
      */
     public function testWhere($sql, $where)
     {
-        $base = new BaseTestTarget;
-
-        $this->assertEquals($sql, $base->sqlDump('?', sqlWhere($where)));
+        $this->assertEquals($sql, $this->base->sqlDump('?', sqlWhere($where)));
     }
 
     public function providerWhere()
@@ -227,12 +232,11 @@ class BaseTest extends \PHPUnit_Framework_TestCase
      * @param $where
      *
      * @dataProvider providerWhereException
-     * @expectedException InvalidArgumentException
      */
     public function testWhereException($where)
     {
-        $base = new BaseTestTarget;
-        $base->sqlDump('?', sqlWhere($where));
+        $this->expectException(\InvalidArgumentException::class);
+        $this->base->sqlDump('?', sqlWhere($where));
     }
 
     public function providerWhereException()
@@ -252,11 +256,9 @@ class BaseTest extends \PHPUnit_Framework_TestCase
      */
     public function testInsert($sql, $insert)
     {
-        $base = new BaseTestTarget;
-
-        $base->sqlDumpBegin();
-        $base->sqlInsert('TABLE', $insert);
-        $dump = $base->sqlDumpEnd();
+        $this->base->sqlDumpBegin();
+        $this->base->sqlInsert('TABLE', $insert);
+        $dump = $this->base->sqlDumpEnd();
         $this->assertEquals($sql, $dump[0]);
     }
 
@@ -291,11 +293,9 @@ class BaseTest extends \PHPUnit_Framework_TestCase
      */
     public function testInsertBulk($sql, $keys, $values)
     {
-        $base = new BaseTestTarget;
-
-        $base->sqlDumpBegin();
-        $base->sqlInsertBulk('TABLE', $keys, $values);
-        $dump = $base->sqlDumpEnd();
+        $this->base->sqlDumpBegin();
+        $this->base->sqlInsertBulk('TABLE', $keys, $values);
+        $dump = $this->base->sqlDumpEnd();
         $this->assertEquals($sql, $dump[0]);
     }
 
@@ -320,16 +320,15 @@ class BaseTest extends \PHPUnit_Framework_TestCase
      * @param $insert
      *
      * @dataProvider providerInsertException
-     * @expectedException InvalidArgumentException
      */
     public function testInsertException($insert)
     {
-        $base = new BaseTestTarget;
+        $this->expectException(\InvalidArgumentException::class);
 
-        $base->sqlDumpBegin();
-        $base->sqlInsert('TABLE', $insert);
-        $base->sqlInsertOrUpdate('TABLE', $insert);
-        $base->sqlDumpEnd();
+        $this->base->sqlDumpBegin();
+        $this->base->sqlInsert('TABLE', $insert);
+        $this->base->sqlInsertOrUpdate('TABLE', $insert);
+        $this->base->sqlDumpEnd();
     }
 
     public function providerInsertException()
@@ -352,11 +351,9 @@ class BaseTest extends \PHPUnit_Framework_TestCase
      */
     public function testUpsert($sql, $insert)
     {
-        $base = new BaseTestTarget;
-
-        $base->sqlDumpBegin();
-        $base->sqlInsertOrUpdate('TABLE', $insert);
-        $dump = $base->sqlDumpEnd();
+        $this->base->sqlDumpBegin();
+        $this->base->sqlInsertOrUpdate('TABLE', $insert);
+        $dump = $this->base->sqlDumpEnd();
         $this->assertEquals($sql, $dump[0]);
     }
 
@@ -391,11 +388,9 @@ class BaseTest extends \PHPUnit_Framework_TestCase
      */
     public function testUpsertBulk($sql, $keys, $valuess)
     {
-        $base = new BaseTestTarget;
-
-        $base->sqlDumpBegin();
-        $base->sqlInsertOrUpdateBulk('TABLE', $keys, $valuess);
-        $dump = $base->sqlDumpEnd();
+        $this->base->sqlDumpBegin();
+        $this->base->sqlInsertOrUpdateBulk('TABLE', $keys, $valuess);
+        $dump = $this->base->sqlDumpEnd();
         $this->assertEquals($sql, $dump[0]);
     }
 
@@ -423,11 +418,9 @@ class BaseTest extends \PHPUnit_Framework_TestCase
      */
     public function testUpdate($sql, $update)
     {
-        $base = new BaseTestTarget;
-
-        $base->sqlDumpBegin();
-        $base->sqlUpdate('TABLE', $update, ['a' => 1]);
-        $dump = $base->sqlDumpEnd();
+        $this->base->sqlDumpBegin();
+        $this->base->sqlUpdate('TABLE', $update, ['a' => 1]);
+        $dump = $this->base->sqlDumpEnd();
         $this->assertEquals('UPDATE `TABLE` SET ' . $sql . ' WHERE `a` = "1"', $dump[0]);
     }
 
@@ -477,9 +470,7 @@ class BaseTest extends \PHPUnit_Framework_TestCase
      */
     public function testTable($sql, $join)
     {
-        $base = new BaseTestTarget;
-
-        $this->assertEquals($sql, $base->sqlDump('?', $join));
+        $this->assertEquals($sql, $this->base->sqlDump('?', $join));
     }
 
     public function providerTable()
@@ -571,9 +562,7 @@ class BaseTest extends \PHPUnit_Framework_TestCase
      */
     public function testEscapeItem($result, $sql, $item)
     {
-        $base = new BaseTestTarget;
-
-        $this->assertEquals($result, $base->sqlDump($sql, $item));
+        $this->assertEquals($result, $this->base->sqlDump($sql, $item));
     }
 
     public function providerEscapeItem()
@@ -617,13 +606,11 @@ class BaseTest extends \PHPUnit_Framework_TestCase
      * @param $item
      *
      * @dataProvider providerEscapeItemException
-     * @expectedException InvalidArgumentException
      */
     public function testEscapeItemException($sql, $item)
     {
-        $base = new BaseTestTarget;
-
-        $base->sqlDump($sql, $item);
+        $this->expectException(\InvalidArgumentException::class);
+        $this->base->sqlDump($sql, $item);
     }
 
     public function providerEscapeItemException()
@@ -649,13 +636,11 @@ class BaseTest extends \PHPUnit_Framework_TestCase
      * @param $where
      *
      * @dataProvider providerException
-     * @expectedException InvalidArgumentException
      */
     public function testException($sql, $where)
     {
-        $base = new BaseTestTarget;
-
-        $base->sqlDump($sql, sqlWhere($where));
+        $this->expectException(\InvalidArgumentException::class);
+        $this->base->sqlDump($sql, sqlWhere($where));
     }
 
     public function providerException()
@@ -682,13 +667,11 @@ class BaseTest extends \PHPUnit_Framework_TestCase
      * @param $where
      *
      * @dataProvider providerUpdateException
-     * @expectedException InvalidArgumentException
      */
     public function testUpdateException($update, $where)
     {
-        $base = new BaseTestTarget;
-
-        $base->sqlUpdate('TABLE', $update, $where);
+        $this->expectException(\InvalidArgumentException::class);
+        $this->base->sqlUpdate('TABLE', $update, $where);
     }
 
     public function providerUpdateException()
