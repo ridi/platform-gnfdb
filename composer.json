@@ -10,6 +10,11 @@
             "lib/db/helpers.php"
         ]
     },
+    "autoload-dev": {
+        "psr-4": {
+            "Gnf\\Tests\\db\\": "tests/db"
+        }
+    },
     "authors": [
         {
             "name": "genesos",
@@ -21,5 +26,8 @@
     },
     "require-dev": {
         "phpunit/phpunit": "^5"
+    },
+    "scripts": {
+        "test": "phpdbg -qrr vendor/bin/phpunit --coverage-text --debug"
     }
 }
