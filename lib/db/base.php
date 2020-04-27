@@ -5,10 +5,10 @@ namespace Gnf\db;
 use Exception;
 use Gnf\db\Helper\GnfSqlNot;
 use Gnf\db\Helper\GnfSqlNow;
-use Gnf\db\Superclass\gnfDbinterface;
+use Gnf\db\Superclass\GnfDbinterface;
 use InvalidArgumentException;
 
-abstract class base implements gnfDbinterface
+abstract class base implements GnfDbinterface
 {
     /** @var array */
     private $dump = [];
