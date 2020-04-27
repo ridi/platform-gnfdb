@@ -1,0 +1,46 @@
+name: PHP Composer
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  test:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Install PHP with extensions
+        uses: shivammathur/setup-php@v2
+        with:
+          extensions: dom, json, libxml, mbstring, soap, xml, xmlwriter, intl, phpdbg
+          ini-values: assert.exception=1, zend.assertions=1
+
+      - name: Determine composer cache directory on Linux
+        run: echo "::set-env name=COMPOSER_CACHE_DIR::$(composer config cache-dir)"
+
+      - name: Cache dependencies installed with composer
+        uses: actions/cache@v1
+        with:
+          path: ${{ env.COMPOSER_CACHE_DIR }}
+          key: php-composer-${{ hashFiles('**/composer.json') }}
+          restore-keys: |
+            php-composer-
+
+      - name: Install dependencies with composer
+        run: composer update
+
+      - name: Run tests with phpunit
+        run: composer run-script test
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: true
+          yml: ./codecov.yml #optional
