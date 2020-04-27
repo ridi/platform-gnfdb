@@ -3,11 +3,11 @@
     "description": "A Database library",
     "license": "MIT",
     "autoload": {
-        "psr-0": {
-            "Gnf": "lib/"
+        "psr-4": {
+            "Gnf\\": "lib"
         },
         "files": [
-            "lib/Gnf/db/helpers.php"
+            "lib/db/helpers.php"
         ]
     },
     "authors": [
