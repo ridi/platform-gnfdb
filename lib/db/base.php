@@ -2,11 +2,9 @@
 
 namespace Gnf\db;
 
-use Exception;
 use Gnf\db\Helper\GnfSqlNot;
 use Gnf\db\Helper\GnfSqlNow;
 use Gnf\db\Superclass\StatementInterface;
-use InvalidArgumentException;
 
 abstract class base implements StatementInterface
 {
@@ -52,11 +50,11 @@ abstract class base implements StatementInterface
             $this->sqlRollback();
 
             return false;
-        } else {
-            $this->sqlCommit();
-
-            return true;
         }
+
+        $this->sqlCommit();
+
+        return true;
     }
 
     public function sqlCommit()
@@ -70,7 +68,7 @@ abstract class base implements StatementInterface
                 $this->transactionCommit();
             }
             if ($this->transaction_depth < 0) {
-                throw new Exception('[mysql] transaction underflow');
+                throw new \Exception('[mysql] transaction underflow');
             }
         }
     }
@@ -86,7 +84,7 @@ abstract class base implements StatementInterface
                 $this->transactionRollback();
             }
             if ($this->transaction_depth < 0) {
-                throw new Exception('[mysql] transaction underflow');
+                throw new \Exception('[mysql] transaction underflow');
             }
         }
     }
@@ -100,12 +98,12 @@ abstract class base implements StatementInterface
      * @param $func callable
      *
      * @return bool transaction success
-     * @throws Exception
+     * @throws \Exception
      */
     public function transactional($func)
     {
         if (!is_callable($func)) {
-            throw new InvalidArgumentException(
+            throw new \InvalidArgumentException(
                 'Expected argument of type "callable", got "' . gettype($func) . '"'
             );
         }
@@ -116,7 +114,7 @@ abstract class base implements StatementInterface
             $func($this);
 
             return $this->sqlEnd();
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             $this->sqlRollback();
             throw $e;
         }
@@ -191,7 +189,7 @@ abstract class base implements StatementInterface
                 } elseif ($dat instanceof GnfSqlNot && is_array($dat->dat)) {
                     $ret[] = '( ! ( ' . $this->serializeWhere($dat->dat) . ' ) )';
                 } else {
-                    throw new InvalidArgumentException('process sqlAnd needs where(key, value pair)');
+                    throw new \InvalidArgumentException('process sqlAnd needs where(key, value pair)');
                 }
             }
             if (count($ret)) {
@@ -208,7 +206,7 @@ abstract class base implements StatementInterface
                 } elseif ($dat instanceof GnfSqlNot && is_array($dat->dat)) {
                     $ret[] = '( ! ( ' . $this->serializeWhere($dat->dat) . ' ) )';
                 } else {
-                    throw new InvalidArgumentException('process sqlOr needs where(key, value pair)');
+                    throw new \InvalidArgumentException('process sqlOr needs where(key, value pair)');
                 }
             }
             if (count($ret)) {
@@ -218,14 +216,14 @@ abstract class base implements StatementInterface
             return '';
         }
         if (is_int($key)) {
-            throw new InvalidArgumentException('cannot implict int key as column : ' . $key);
+            throw new \InvalidArgumentException('cannot implict int key as column : ' . $key);
         }
         if (is_array($value)) {
             //divide
             $scalars = [];
             $objects = [];
             if (count($value) == 0) {
-                throw new InvalidArgumentException('zero size array, key : ' . $key);
+                throw new \InvalidArgumentException('zero size array, key : ' . $key);
             }
             foreach ($value as $operand) {
                 if (is_scalar($operand)) {
@@ -264,7 +262,7 @@ abstract class base implements StatementInterface
     private function serializeWhere($array)
     {
         if (count($array) === 0) {
-            throw new InvalidArgumentException('zero size array can not serialize');
+            throw new \InvalidArgumentException('zero size array can not serialize');
         }
         $wheres = array_map([&$this, 'callbackSerializeWhere'], array_keys($array), $array);
         $wheres = array_filter($wheres, 'strlen');
@@ -397,7 +395,7 @@ abstract class base implements StatementInterface
     {
         $dot_count = substr_count($fullsized_column, '.');
         if ($dot_count !== 1 && $dot_count !== 2) {
-            throw new Exception('invalid column name (' . $fullsized_column . ') to extract table name');
+            throw new \Exception('invalid column name (' . $fullsized_column . ') to extract table name');
         }
         $fullsized_column_items = explode('.', $fullsized_column);
         array_pop($fullsized_column_items);
@@ -414,7 +412,7 @@ abstract class base implements StatementInterface
     private static function escapeColumnName($k)
     {
         if (is_int($k)) {
-            throw new InvalidArgumentException('cannot implict int key as column : ' . $k);
+            throw new \InvalidArgumentException('cannot implict int key as column : ' . $k);
         }
         $k = str_replace('`', '', $k);
         $k = str_replace('.', '`.`', $k);
@@ -457,7 +455,7 @@ abstract class base implements StatementInterface
             return '"' . $this->escapeLiteral($value) . '"';
         } elseif (is_array($value)) {
             if (count($value) === 0) {
-                throw new InvalidArgumentException('zero size array, key : ' . (string)$column);
+                throw new \InvalidArgumentException('zero size array, key : ' . (string)$column);
             }
 
             return '(' . implode(', ', array_map([&$this, 'escapeItemExceptNull'], $value)) . ')';
@@ -496,7 +494,7 @@ abstract class base implements StatementInterface
 
             return $this->escapeItemExceptNull($value->dat);
         }
-        throw new InvalidArgumentException('invalid escape item');
+        throw new \InvalidArgumentException('invalid escape item');
     }
 
     private function parseQuery($args)
@@ -511,13 +509,13 @@ abstract class base implements StatementInterface
                     continue;
                 }
                 if (count($escaped_items) === 0) {
-                    throw new InvalidArgumentException('unmatched "? count" with "argument count"');
+                    throw new \InvalidArgumentException('unmatched "? count" with "argument count"');
                 }
                 $escaped_item = array_shift($escaped_items);
                 $breaked_sql_blocks[$index] = $escaped_item . $breaked_sql_block;
             }
             if (count($escaped_items) !== 0) {
-                throw new InvalidArgumentException('unmatched "? count" with "argument count"');
+                throw new \InvalidArgumentException('unmatched "? count" with "argument count"');
             }
 
             return implode('', $breaked_sql_blocks);
@@ -555,7 +553,7 @@ abstract class base implements StatementInterface
      * @param $sql
      *
      * @return mixed
-     * @throws Exception
+     * @throws \Exception
      */
     private function sqlDoWithoutParsing($sql)
     {
@@ -568,7 +566,7 @@ abstract class base implements StatementInterface
         $err = $this->getError($ret);
         if ($err !== null) {
             $this->is_transaction_error = true;
-            throw new Exception('[sql error] ' . $err->message . ' : ' . $sql);
+            throw new \Exception('[sql error] ' . $err->message . ' : ' . $sql);
         }
 
         return $ret;
