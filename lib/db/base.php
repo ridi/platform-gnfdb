@@ -5,10 +5,10 @@ namespace Gnf\db;
 use Exception;
 use Gnf\db\Helper\GnfSqlNot;
 use Gnf\db\Helper\GnfSqlNow;
-use Gnf\db\Superclass\GnfDbinterface;
+use Gnf\db\Superclass\StatementInterface;
 use InvalidArgumentException;
 
-abstract class base implements GnfDbinterface
+abstract class base implements StatementInterface
 {
     /** @var array */
     private $dump = [];
@@ -847,41 +847,4 @@ abstract class base implements GnfDbinterface
         $this->doConnect();
     }
 
-    abstract protected function doConnect();
-
-    abstract protected function hasConnected();
-
-    abstract public function selectDb($db);
-
-    abstract protected function transactionBegin();
-
-    abstract protected function transactionCommit();
-
-    abstract protected function transactionRollback();
-
-    /**
-     * @return bool
-     */
-    abstract protected function configIsSupportNestedTransaction();
-
-    abstract protected function escapeLiteral($value);
-
-    abstract protected function query($sql);
-
-    abstract protected function getError($handle);
-
-    abstract protected function fetchRow($handle);
-
-    abstract protected function fetchAssoc($handle);
-
-    abstract protected function fetchObject($handle);
-
-    abstract protected function fetchBoth($handle);
-
-    /**
-     * @param $handle
-     *
-     * @return int
-     */
-    abstract protected function getAffectedRows($handle);
 }

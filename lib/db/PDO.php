@@ -1,7 +1,9 @@
 <?php
 namespace Gnf\db;
 
-class PDO extends base
+use Gnf\db\Superclass\ConnectionInterface;
+
+class PDO implements ConnectionInterface
 {
     /**
      * @var \PDO
@@ -14,7 +16,6 @@ class PDO extends base
      */
     public function __construct($pdo)
     {
-        parent::__construct();
         $this->db = $pdo;
     }
 
@@ -27,7 +28,7 @@ class PDO extends base
      * addslashes is not safe in multibyte
      * str_replace is safe in multibyte but only utf-8
      */
-    protected function escapeLiteral($value)
+    public function escapeLiteral($value)
     {
         if (!is_string($value)) {
             $value = (string)$value;
@@ -40,7 +41,7 @@ class PDO extends base
         );
     }
 
-    protected function query($sql)
+    public function query($sql)
     {
         return $this->db->query($sql);
     }
@@ -50,7 +51,7 @@ class PDO extends base
      *
      * @return null|\stdClass
      */
-    protected function getError($handle)
+    public function getError($handle)
     {
         $info = $handle->errorInfo();
         if ($info[1] != 0) {
@@ -68,7 +69,7 @@ class PDO extends base
      *
      * @return mixed
      */
-    protected function fetchRow($handle)
+    public function fetchRow($handle)
     {
         return $handle->fetch(\PDO::FETCH_NUM);
     }
@@ -78,7 +79,7 @@ class PDO extends base
      *
      * @return mixed
      */
-    protected function fetchAssoc($handle)
+    public function fetchAssoc($handle)
     {
         return $handle->fetch(\PDO::FETCH_ASSOC);
     }
@@ -88,7 +89,7 @@ class PDO extends base
      *
      * @return mixed
      */
-    protected function fetchObject($handle)
+    public function fetchObject($handle)
     {
         return $handle->fetch(\PDO::FETCH_OBJ);
     }
@@ -98,7 +99,7 @@ class PDO extends base
      *
      * @return mixed
      */
-    protected function fetchBoth($handle)
+    public function fetchBoth($handle)
     {
         return $handle->fetch(\PDO::FETCH_BOTH);
     }
@@ -113,33 +114,33 @@ class PDO extends base
      *
      * @return mixed
      */
-    protected function getAffectedRows($handle)
+    public function getAffectedRows($handle)
     {
         return $handle->rowCount();
     }
 
-    protected function hasConnected()
+    public function hasConnected()
     {
         return is_resource($this->db);
     }
 
-    protected function doConnect()
+    public function doConnect()
     {
         $this->afterConnect();
         $this->db->query('USE ' . $this->escapeLiteral($this->select_db));
     }
 
-    protected function transactionBegin()
+    public function transactionBegin()
     {
         $this->db->beginTransaction();
     }
 
-    protected function transactionCommit()
+    public function transactionCommit()
     {
         $this->db->commit();
     }
 
-    protected function transactionRollback()
+    public function transactionRollback()
     {
         $this->db->rollBack();
     }
@@ -147,7 +148,7 @@ class PDO extends base
     /**
      * @return bool
      */
-    protected function configIsSupportNestedTransaction()
+    public function configIsSupportNestedTransaction()
     {
         return false;
     }
