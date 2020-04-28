@@ -22,8 +22,6 @@ interface ConnectionInterface
      */
     public function configIsSupportNestedTransaction();
 
-    public function escapeLiteral($value);
-
     public function query($sql);
 
     public function getError($handle);

@@ -5,11 +5,6 @@ use Gnf\db\base;
 
 class BaseTestTarget extends base
 {
-    public function __construct()
-    {
-        parent::__construct();
-    }
-
     public function insertId()
     {
     }

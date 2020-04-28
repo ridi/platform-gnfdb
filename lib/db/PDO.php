@@ -24,23 +24,6 @@ class PDO implements ConnectionInterface
         $this->select_db = $db;
     }
 
-    /*
-     * addslashes is not safe in multibyte
-     * str_replace is safe in multibyte but only utf-8
-     */
-    public function escapeLiteral($value)
-    {
-        if (!is_string($value)) {
-            $value = (string)$value;
-        }
-
-        return str_replace(
-            ['\\', "\0", "\n", "\r", "'", '"', "\x1a"],
-            ['\\\\', '\\0', '\\n', '\\r', "\\'", '\\"', '\\Z'],
-            $value
-        );
-    }
-
     public function query($sql)
     {
         return $this->db->query($sql);
@@ -127,7 +110,7 @@ class PDO implements ConnectionInterface
     public function doConnect()
     {
         $this->afterConnect();
-        $this->db->query('USE ' . $this->escapeLiteral($this->select_db));
+        $this->db->query('USE ' . EscapeHelper::escapeLiteral($this->select_db));
     }
 
     public function transactionBegin()
