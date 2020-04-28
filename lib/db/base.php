@@ -2,8 +2,28 @@
 
 namespace Gnf\db;
 
+use Gnf\db\Helper\GnfSqlAdd;
+use Gnf\db\Helper\GnfSqlAnd;
+use Gnf\db\Helper\GnfSqlBetween;
+use Gnf\db\Helper\GnfSqlColumn;
+use Gnf\db\Helper\GnfSqlGreater;
+use Gnf\db\Helper\GnfSqlGreaterEqual;
+use Gnf\db\Helper\GnfSqlJoin;
+use Gnf\db\Helper\GnfSqlLesser;
+use Gnf\db\Helper\GnfSqlLesserEqual;
+use Gnf\db\Helper\GnfSqlLike;
+use Gnf\db\Helper\GnfSqlLikeBegin;
+use Gnf\db\Helper\GnfSqlLimit;
 use Gnf\db\Helper\GnfSqlNot;
 use Gnf\db\Helper\GnfSqlNow;
+use Gnf\db\Helper\GnfSqlNull;
+use Gnf\db\Helper\GnfSqlOr;
+use Gnf\db\Helper\GnfSqlPassword;
+use Gnf\db\Helper\GnfSqlRange;
+use Gnf\db\Helper\GnfSqlRaw;
+use Gnf\db\Helper\GnfSqlStrcat;
+use Gnf\db\Helper\GnfSqlTable;
+use Gnf\db\Helper\GnfSqlWhere;
 use Gnf\db\Superclass\StatementInterface;
 
 abstract class base implements StatementInterface
@@ -131,57 +151,55 @@ abstract class base implements StatementInterface
      */
     private function callbackSerializeWhere($key, $value)
     {
-        if (is_a($value, '\Gnf\db\Helper\GnfSqlNull') || is_null($value)) {
-            return self::escapeColumnName($key) . ' is NULL';
+        if ($value instanceof GnfSqlNull || is_null($value)) {
+            return $this->escapeColumnName($key) . ' is NULL';
         }
-        if (is_a($value, '\Gnf\db\Helper\GnfSqlNot') &&
-            (
-                is_a($value->dat, '\Gnf\db\Helper\GnfSqlNull') ||
-                is_null($value->dat)
-            )
+        if (
+            $value instanceof GnfSqlNot
+            && ($value->dat instanceof GnfSqlNull || is_null($value->dat))
         ) {
-            return self::escapeColumnName($key) . ' is not NULL';
+            return $this->escapeColumnName($key) . ' is not NULL';
         }
-        if (is_a($value, '\Gnf\db\Helper\GnfSqlNot')) {
+        if ($value instanceof GnfSqlNot) {
             $ret = $this->callbackSerializeWhere($key, $value->dat);
-            if (strlen($ret)) {
+            if ($ret !== '') {
                 return '( !( ' . $ret . ' ) )';
             }
 
             return '';
         }
-        if (is_a($value, '\Gnf\db\Helper\GnfSqlLike')) {
-            return self::escapeColumnName($key) . ' like "%' . $this->escapeLiteral($value->dat) . '%"';
+        if ($value instanceof GnfSqlLike) {
+            return $this->escapeColumnName($key) . ' like "%' . $this->escapeLiteral($value->dat) . '%"';
         }
-        if (is_a($value, '\Gnf\db\Helper\GnfSqlLikeBegin')) {
-            return self::escapeColumnName($key) . ' like "' . $this->escapeLiteral($value->dat) . '%"';
+        if ($value instanceof GnfSqlLikeBegin) {
+            return $this->escapeColumnName($key) . ' like "' . $this->escapeLiteral($value->dat) . '%"';
         }
-        if (is_a($value, '\Gnf\db\Helper\GnfSqlGreater')) {
-            return self::escapeColumnName($key) . ' > ' . $this->escapeItemExceptNull($value->dat, $key);
+        if ($value instanceof GnfSqlGreater) {
+            return $this->escapeColumnName($key) . ' > ' . $this->escapeItemExceptNull($value->dat, $key);
         }
-        if (is_a($value, '\Gnf\db\Helper\GnfSqlLesser')) {
-            return self::escapeColumnName($key) . ' < ' . $this->escapeItemExceptNull($value->dat, $key);
+        if ($value instanceof GnfSqlLesser) {
+            return $this->escapeColumnName($key) . ' < ' . $this->escapeItemExceptNull($value->dat, $key);
         }
-        if (is_a($value, '\Gnf\db\Helper\GnfSqlGreaterEqual')) {
-            return self::escapeColumnName($key) . ' >= ' . $this->escapeItemExceptNull($value->dat, $key);
+        if ($value instanceof GnfSqlGreaterEqual) {
+            return $this->escapeColumnName($key) . ' >= ' . $this->escapeItemExceptNull($value->dat, $key);
         }
-        if (is_a($value, '\Gnf\db\Helper\GnfSqlLesserEqual')) {
-            return self::escapeColumnName($key) . ' <= ' . $this->escapeItemExceptNull($value->dat, $key);
+        if ($value instanceof GnfSqlLesserEqual) {
+            return $this->escapeColumnName($key) . ' <= ' . $this->escapeItemExceptNull($value->dat, $key);
         }
-        if (is_a($value, '\Gnf\db\Helper\GnfSqlBetween')) {
-            return self::escapeColumnName($key) . ' between ' . $this->escapeItemExceptNull($value->dat, $key) . ' and ' .
+        if ($value instanceof GnfSqlBetween) {
+            return $this->escapeColumnName($key) . ' between ' . $this->escapeItemExceptNull($value->dat, $key) . ' and ' .
                 $this->escapeItemExceptNull(
                     $value->dat2,
                     $key
                 );
         }
-        if (is_a($value, '\Gnf\db\Helper\GnfSqlRange')) {
+        if ($value instanceof GnfSqlRange) {
             return '(' . $this->escapeItemExceptNull($value->dat, $key) . ' <= ' .
-                self::escapeColumnName(
+                $this->escapeColumnName(
                     $key
-                ) . ' and ' . self::escapeColumnName($key) . ' < ' . $this->escapeItemExceptNull($value->dat2, $key) . ')';
+                ) . ' and ' . $this->escapeColumnName($key) . ' < ' . $this->escapeItemExceptNull($value->dat2, $key) . ')';
         }
-        if (is_a($value, '\Gnf\db\Helper\GnfSqlAnd')) {
+        if ($value instanceof GnfSqlAnd) {
             $ret = [];
             foreach ($value->dat as $dat) {
                 if (is_array($dat)) {
@@ -198,7 +216,7 @@ abstract class base implements StatementInterface
 
             return '';
         }
-        if (is_a($value, '\Gnf\db\Helper\GnfSqlOr')) {
+        if ($value instanceof GnfSqlOr) {
             $ret = [];
             foreach ($value->dat as $dat) {
                 if (is_array($dat)) {
@@ -243,7 +261,7 @@ abstract class base implements StatementInterface
                 $objects_query = '';
             }
             if (count($scalars)) {
-                $scalars_query = self::escapeColumnName($key) . ' in ' . $this->escapeItemExceptNull($scalars, $key);
+                $scalars_query = $this->escapeColumnName($key) . ' in ' . $this->escapeItemExceptNull($scalars, $key);
             } else {
                 $scalars_query = '';
             }
@@ -256,7 +274,7 @@ abstract class base implements StatementInterface
             return $objects_query . $scalars_query;
         }
 
-        return self::escapeColumnName($key) . ' = ' . $this->escapeItemExceptNull($value, $key);
+        return $this->escapeColumnName($key) . ' = ' . $this->escapeItemExceptNull($value, $key);
     }
 
     private function serializeWhere($array)
@@ -272,11 +290,11 @@ abstract class base implements StatementInterface
 
     private function callbackSerializeUpdate($key, $value)
     {
-        if (is_a($value, '\Gnf\db\Helper\GnfSqlNull') || is_null($value)) {
-            return self::escapeColumnName($key) . ' = NULL';
+        if ($value instanceof GnfSqlNull || is_null($value)) {
+            return $this->escapeColumnName($key) . ' = NULL';
         }
 
-        return self::escapeColumnName($key) . ' = ' . $this->escapeItemExceptNull($value, $key);
+        return $this->escapeColumnName($key) . ' = ' . $this->escapeItemExceptNull($value, $key);
     }
 
     private function serializeUpdate($arr)
@@ -286,7 +304,7 @@ abstract class base implements StatementInterface
 
     private function escapeTable($a)
     {
-        if (is_a($a, '\Gnf\db\Helper\GnfSqlJoin')) {
+        if ($a instanceof GnfSqlJoin) {
             $ret = '';
             foreach ($a->dat as $k => $columns) {
                 /** @var $has_join_only_one_column
@@ -305,12 +323,12 @@ abstract class base implements StatementInterface
                     $last_column = '';
                     foreach ($columns as $key_of_column => $column) {
                         if (strlen($ret) === 0) {
-                            $ret .= self::escapeTableNameFromFullColumnElement($column);
+                            $ret .= $this->escapeTableNameFromFullColumnElement($column);
                         } else {
                             $ret .=
-                                "\n\t" . $a->type . ' ' . self::escapeTableNameFromFullColumnElement($column) .
-                                "\n\t\t" . 'on ' . self::escapeColumnName($last_column) .
-                                ' = ' . self::escapeColumnName($column);
+                                "\n\t" . $a->type . ' ' . $this->escapeTableNameFromFullColumnElement($column) .
+                                "\n\t\t" . 'on ' . $this->escapeColumnName($last_column) .
+                                ' = ' . $this->escapeColumnName($column);
                         }
                         $last_column = $column;
                     }
@@ -326,7 +344,7 @@ abstract class base implements StatementInterface
                     foreach ($columns as $key_of_column => $column) {
                         $has_more_joinable_where_clause = !is_int($key_of_column);
                         if ($has_more_joinable_where_clause) {
-                            $table_name = self::escapeTableNameFromFullColumnElement($key_of_column);
+                            $table_name = $this->escapeTableNameFromFullColumnElement($key_of_column);
                             $joinable_where_clause[$table_name][$key_of_column] = $column;
                         }
                     }
@@ -338,24 +356,24 @@ abstract class base implements StatementInterface
                             $join_right_column = $column;
 
                             if (strlen($ret) == 0) {
-                                $ret .= self::escapeTableNameFromFullColumnElement($join_left_column) . ' ' .
+                                $ret .= $this->escapeTableNameFromFullColumnElement($join_left_column) . ' ' .
                                     "\n\t" . $a->type . ' ' .
-                                    self::escapeTableNameFromFullColumnElement($join_right_column) .
+                                    $this->escapeTableNameFromFullColumnElement($join_right_column) .
                                     "\n\t\t" . 'on ' .
-                                    self::escapeColumnName($join_left_column) .
+                                    $this->escapeColumnName($join_left_column) .
                                     ' = ' .
-                                    self::escapeColumnName($join_right_column);
+                                    $this->escapeColumnName($join_right_column);
                             } else {
                                 $ret .= ' ' .
                                     "\n\t" . $a->type .
                                     ' ' .
-                                    self::escapeTableNameFromFullColumnElement($join_right_column) .
+                                    $this->escapeTableNameFromFullColumnElement($join_right_column) .
                                     "\n\t\t" . 'on ' .
-                                    self::escapeColumnName($join_left_column) .
+                                    $this->escapeColumnName($join_left_column) .
                                     ' = ' .
-                                    self::escapeColumnName($join_right_column);
+                                    $this->escapeColumnName($join_right_column);
                             }
-                            $join_right_table_name = self::escapeTableNameFromFullColumnElement($join_right_column);
+                            $join_right_table_name = $this->escapeTableNameFromFullColumnElement($join_right_column);
                             if (isset($joinable_where_clause[$join_right_table_name])) {
                                 $ret .= ' and '
                                     . $this->serializeWhere($joinable_where_clause[$join_right_table_name]);
@@ -371,19 +389,19 @@ abstract class base implements StatementInterface
 
             return $ret;
         }
-        if (is_a($a, '\Gnf\db\Helper\GnfSqlTable')) {
+        if ($a instanceof GnfSqlTable) {
             $a = $a->dat;
         }
 
-        return self::escapeTableNameFromTableElement($a);
+        return $this->escapeTableNameFromTableElement($a);
     }
 
-    private static function escapeTableNameFromTableElement($tablename)
+    private function escapeTableNameFromTableElement($tablename)
     {
-        return self::escapeFullColumnElement($tablename);
+        return $this->escapeFullColumnElement($tablename);
     }
 
-    private static function escapeFullColumnElement($table_column_element)
+    private function escapeFullColumnElement($table_column_element)
     {
         $table_column_element = preg_replace("/\..+/", "", $table_column_element);
         $table_column_element = str_replace('`', '', $table_column_element);
@@ -391,7 +409,7 @@ abstract class base implements StatementInterface
         return '`' . $table_column_element . '`';
     }
 
-    private static function escapeTableNameFromFullColumnElement($fullsized_column)
+    private function escapeTableNameFromFullColumnElement($fullsized_column)
     {
         $dot_count = substr_count($fullsized_column, '.');
         if ($dot_count !== 1 && $dot_count !== 2) {
@@ -401,7 +419,7 @@ abstract class base implements StatementInterface
         array_pop($fullsized_column_items);
         $fullsized_column_items = array_map(
             function ($item) {
-                return self::escapeFullColumnElement($item);
+                return $this->escapeFullColumnElement($item);
             },
             $fullsized_column_items
         );
@@ -409,13 +427,12 @@ abstract class base implements StatementInterface
         return implode('.', $fullsized_column_items);
     }
 
-    private static function escapeColumnName($k)
+    private function escapeColumnName($k)
     {
         if (is_int($k)) {
             throw new \InvalidArgumentException('cannot implict int key as column : ' . $k);
         }
-        $k = str_replace('`', '', $k);
-        $k = str_replace('.', '`.`', $k);
+        $k = str_replace(['`', '.'], ['', '`.`'], $k);
 
         return '`' . $k . '`';
     }
@@ -428,7 +445,7 @@ abstract class base implements StatementInterface
      */
     private function escapeItem($value)
     {
-        if (is_a($value, '\Gnf\db\Helper\GnfSqlNull') || is_null($value)) {
+        if ($value instanceof GnfSqlNull || is_null($value)) {
             return 'NULL';
         }
 
@@ -447,53 +464,69 @@ abstract class base implements StatementInterface
             if (is_bool($value)) {
                 if ($value) {
                     return 'true';
-                } else {
-                    return 'false';
                 }
+
+                return 'false';
             }
 
             return '"' . $this->escapeLiteral($value) . '"';
-        } elseif (is_array($value)) {
+        }
+
+        if (is_array($value)) {
             if (count($value) === 0) {
                 throw new \InvalidArgumentException('zero size array, key : ' . (string)$column);
             }
 
             return '(' . implode(', ', array_map([&$this, 'escapeItemExceptNull'], $value)) . ')';
-        } elseif (is_object($value)) {
-            if (is_a($value, GnfSqlNow::class)) {
+        }
+
+        if (is_object($value)) {
+            if ($value instanceof GnfSqlNow) {
                 return 'now()';
-            } elseif (is_a($value, '\Gnf\db\Helper\GnfSqlPassword')) {
+            }
+            if ($value instanceof GnfSqlPassword) {
                 return 'password(' . $this->escapeItemExceptNull($value->dat) . ')';
-            } elseif (is_a($value, '\Gnf\db\Helper\GnfSqlLike')) {
+            }
+            if ($value instanceof GnfSqlLike) {
                 return '"%' . $this->escapeLiteral($value->dat) . '%"';
-            } elseif (is_a($value, '\Gnf\db\Helper\GnfSqlLikeBegin')) {
+            }
+            if ($value instanceof GnfSqlLikeBegin) {
                 return '"' . $this->escapeLiteral($value->dat) . '%"';
-            } elseif (is_a($value, '\Gnf\db\Helper\GnfSqlRaw')) {
+            }
+            if ($value instanceof GnfSqlRaw) {
                 return $value->dat;
-            } elseif (is_a($value, '\Gnf\db\Helper\GnfSqlTable')) {
+            }
+            if ($value instanceof GnfSqlTable) {
                 return $this->escapeTable($value);
-            } elseif (is_a($value, '\Gnf\db\Helper\GnfSqlColumn')) {
-                return self::escapeColumnName($value->dat);
-            } elseif (is_a($value, '\Gnf\db\Helper\GnfSqlWhere')) {
+            }
+            if ($value instanceof GnfSqlColumn) {
+                return $this->escapeColumnName($value->dat);
+            }
+            if ($value instanceof GnfSqlWhere) {
                 return $this->serializeWhere($value->dat);
-            } elseif (is_a($value, '\Gnf\db\Helper\GnfSqlLimit')) {
+            }
+            if ($value instanceof GnfSqlLimit) {
                 return 'limit ' . $value->from . ', ' . $value->count;
-            } elseif (is_a($value, '\Gnf\db\Helper\GnfSqlAdd') && is_string($column)) {//only for update
+            }
+            if ($value instanceof GnfSqlAdd && is_string($column)) {//only for update
                 if ($value->dat > 0) {
-                    return self::escapeColumnName($column) . ' + ' . ($value->dat);
-                } elseif ($value->dat < 0) {
-                    return self::escapeColumnName($column) . ' ' . ($value->dat);
+                    return $this->escapeColumnName($column) . ' + ' . ($value->dat);
+                }
+                if ($value->dat < 0) {
+                    return $this->escapeColumnName($column) . ' ' . ($value->dat);
                 }
 
-                return self::escapeColumnName($column);
-            } elseif (is_a($value, '\Gnf\db\Helper\GnfSqlStrcat') && is_string($column)) {//only for update
-                return 'concat(ifnull(' . self::escapeColumnName($column) . ', ""), ' . $this->escapeItemExceptNull(
+                return $this->escapeColumnName($column);
+            }
+            if ($value instanceof GnfSqlStrcat && is_string($column)) {//only for update
+                return 'concat(ifnull(' . $this->escapeColumnName($column) . ', ""), ' . $this->escapeItemExceptNull(
                         $value->dat
                     ) . ')';
             }
 
             return $this->escapeItemExceptNull($value->dat);
         }
+
         throw new \InvalidArgumentException('invalid escape item');
     }
 
@@ -541,12 +574,11 @@ abstract class base implements StatementInterface
         return null;
     }
 
-    public function sqlDo($sql)
+    public function sqlDo(...$args)
     {
-        $sql = $this->parseQuery(func_get_args());
-        $ret = $this->sqlDoWithoutParsing($sql);
+        $sql = $this->parseQuery($args);
 
-        return $ret;
+        return $this->sqlDoWithoutParsing($sql);
     }
 
     /**
@@ -572,14 +604,14 @@ abstract class base implements StatementInterface
         return $ret;
     }
 
-    public function sqlDump($sql)
+    public function sqlDump(...$args)
     {
-        return $this->parseQuery(func_get_args());
+        return $this->parseQuery($args);
     }
 
-    public function sqlData($sql)
+    public function sqlData(...$args)
     {
-        $sql = $this->parseQuery(func_get_args());
+        $sql = $this->parseQuery($args);
         $res = $this->sqlDoWithoutParsing($sql);
         if ($res) {
             $arr = $this->fetchRow($res);
@@ -591,9 +623,9 @@ abstract class base implements StatementInterface
         return null;
     }
 
-    public function sqlDatas($sql)
+    public function sqlDatas(...$args)
     {
-        $sql = $this->parseQuery(func_get_args());
+        $sql = $this->parseQuery($args);
         $res = $this->sqlDoWithoutParsing($sql);
         $ret = [];
         if ($res) {
@@ -605,9 +637,9 @@ abstract class base implements StatementInterface
         return $ret;
     }
 
-    public function sqlArray($sql)
+    public function sqlArray(...$args)
     {
-        $sql = $this->parseQuery(func_get_args());
+        $sql = $this->parseQuery($args);
         $res = $this->sqlDoWithoutParsing($sql);
         if ($res) {
             $arr = $this->fetchRow($res);
@@ -619,9 +651,9 @@ abstract class base implements StatementInterface
         return null;
     }
 
-    public function sqlArrays($sql)
+    public function sqlArrays(...$args)
     {
-        $sql = $this->parseQuery(func_get_args());
+        $sql = $this->parseQuery($args);
         $res = $this->sqlDoWithoutParsing($sql);
         $ret = [];
         if ($res) {
@@ -633,9 +665,9 @@ abstract class base implements StatementInterface
         return $ret;
     }
 
-    public function sqlDict($sql)
+    public function sqlDict(...$args)
     {
-        $sql = $this->parseQuery(func_get_args());
+        $sql = $this->parseQuery($args);
         $res = $this->sqlDoWithoutParsing($sql);
         if ($res) {
             $arr = $this->fetchAssoc($res);
@@ -647,9 +679,9 @@ abstract class base implements StatementInterface
         return null;
     }
 
-    public function sqlDicts($sql)
+    public function sqlDicts(...$args)
     {
-        $sql = $this->parseQuery(func_get_args());
+        $sql = $this->parseQuery($args);
         $res = $this->sqlDoWithoutParsing($sql);
         $ret = [];
         if ($res) {
@@ -661,9 +693,9 @@ abstract class base implements StatementInterface
         return $ret;
     }
 
-    public function sqlObject($sql)
+    public function sqlObject(...$args)
     {
-        $sql = $this->parseQuery(func_get_args());
+        $sql = $this->parseQuery($args);
         $res = $this->sqlDoWithoutParsing($sql);
         if ($res) {
             $arr = $this->fetchObject($res);
@@ -675,9 +707,9 @@ abstract class base implements StatementInterface
         return null;
     }
 
-    public function sqlObjects($sql)
+    public function sqlObjects(...$args)
     {
-        $sql = $this->parseQuery(func_get_args());
+        $sql = $this->parseQuery($args);
         $res = $this->sqlDoWithoutParsing($sql);
         $ret = [];
         if ($res) {
@@ -689,9 +721,9 @@ abstract class base implements StatementInterface
         return $ret;
     }
 
-    public function sqlLine($sql)
+    public function sqlLine(...$args)
     {
-        $sql = $this->parseQuery(func_get_args());
+        $sql = $this->parseQuery($args);
         $res = $this->sqlDoWithoutParsing($sql);
         if ($res) {
             $arr = $this->fetchRow($res);
@@ -703,9 +735,9 @@ abstract class base implements StatementInterface
         return null;
     }
 
-    public function sqlLines($sql)
+    public function sqlLines(...$args)
     {
-        $sql = $this->parseQuery(func_get_args());
+        $sql = $this->parseQuery($args);
         $res = $this->sqlDoWithoutParsing($sql);
         $ret = [];
         if ($res) {
@@ -844,5 +876,4 @@ abstract class base implements StatementInterface
         }
         $this->doConnect();
     }
-
 }

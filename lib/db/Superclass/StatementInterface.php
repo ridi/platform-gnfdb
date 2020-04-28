@@ -11,23 +11,23 @@ interface StatementInterface
 
     public function sqlRollback();
 
-    public function sqlDo($sql);
+    public function sqlDo(...$args);
 
-    public function sqlData($sql);
+    public function sqlData(...$args);
 
-    public function sqlDatas($sql);
+    public function sqlDatas(...$args);
 
-    public function sqlDict($sql);
+    public function sqlDict(...$args);
 
-    public function sqlDicts($sql);
+    public function sqlDicts(...$args);
 
-    public function sqlObject($sql);
+    public function sqlObject(...$args);
 
-    public function sqlObjects($sql);
+    public function sqlObjects(...$args);
 
-    public function sqlLine($sql);
+    public function sqlLine(...$args);
 
-    public function sqlLines($sql);
+    public function sqlLines(...$args);
 
     public function sqlCount($table, $where);
 
